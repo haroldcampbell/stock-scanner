@@ -1,0 +1,105 @@
+html {
+	height: 100%;
+}
+body {
+	font-family: "Open Sans", sans-serif;
+	font-size: 15px;
+	font-style: normal;
+	line-height: 1.8em;
+	color: #444;
+	height: 100%;
+	padding: 0;
+	margin: 0;
+	box-sizing: border-box;
+	position: relative;
+	background: #f6f6f6;
+	/* padding: 20px; */
+}
+
+ul,
+li {
+	padding: 0;
+	margin: 0;
+}
+
+li {
+	list-style: none;
+}
+
+a {
+	color: #444;
+}
+
+a:visited {
+	color: #444;
+}
+
+h1 {
+	font-size: 2em;
+	font-weight: 100;
+	color: #333;
+}
+
+h3 {
+	font-size: 1.25em;
+	font-weight: 100;
+	color: #666;
+	font-weight: 300;
+	line-height: 1.8em;
+}
+
+.page-container {
+	position: relative;
+	display: flex;
+	flex-direction: row;
+	align-items: stretch;
+	overflow: hidden;
+	height: 100%;
+	column-gap: 20px;
+}
+
+.watchlist-scroll-container {
+	position: relative;
+	width: 150px;
+	padding: 10px;
+	display: flex;
+	flex-direction: column;
+	min-height: 200px;
+	margin: 10px;
+}
+
+.watchlist-container {
+	display: flex;
+	flex-direction: column;
+	row-gap: 5px;
+	overflow-y: scroll;
+
+	position: absolute;
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 100%;
+}
+
+.watchlist-container .symbol {
+	background-color: #f0f0f0;
+	cursor: pointer;
+	margin-right: 10px;
+	border-radius: 3px;
+	padding: 0 5px;
+	font-size: 0.8em;
+	color: #777;
+}
+
+.stock-info {
+	display: flex;
+	flex-direction: row;
+	column-gap: 5px;
+	margin-bottom: 10px;
+	align-self: flex-end;
+	align-items: baseline;
+}
+.stock-info h1 {
+	margin: 0;
+	padding: 0;
+}

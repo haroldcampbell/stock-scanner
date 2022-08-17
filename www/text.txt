@@ -1,0 +1,405 @@
+<div class="menu">
+			<h1>Examples</h1>
+			<ul>
+				<li>
+					<a href="#table" target="_parent">Table</a>
+				</li>
+				<li>
+					<a href="#text" target="_parent">Text</a>
+				</li>
+				<li>
+					<a href="#bars" target="_parent">Bars</a>
+				</li>
+				<li>
+					<a href="#ellipses" target="_parent">Ellipses</a>
+				</li>
+				<li>
+					<a href="#arcs" target="_parent">Arcs</a>
+				</li>
+				<li>
+					<a href="#segments" target="_parent">Segments</a>
+				</li>
+				<li>
+					<a href="#chords" target="_parent">Chords</a>
+				</li>
+				<li>
+					<a href="#polygons" target="_parent">Polygons</a>
+				</li>
+				<li>
+					<a href="#radial-lines" target="_parent">Radial Lines</a>
+				</li>
+				<li>
+					<a href="#prect" target="_parent">Path Rects</a>
+				</li>
+				<li>
+					<a href="#advanced" target="_parent">Advanced</a>
+				</li>
+			</ul>
+		</div>
+
+		<a name="table"></a>
+		<ul class="examples-containers">
+			<li>
+				<h2>Text Example 0: Table</h2>
+				<div id="example-table-1" class="container"></div>
+				<p class="desc"></p>
+				<pre class="code-example"></pre>
+			</li>
+		</ul>
+
+		<a name="text"></a>
+		<ul class="examples-containers">
+			<li>
+				<h2>Text Example 1: Text along a path</h2>
+				<div id="example-text-1" class="container"></div>
+				<p class="desc"></p>
+				<pre class="code-example"></pre>
+			</li>
+		</ul>
+
+		<a name="bars"></a>
+		<ul class="examples-containers">
+			<li>
+				<h2>Bar Example 1: Data-driven height</h2>
+				<div id="example-bar-1" class="container"></div>
+				<p class="desc">
+					The height of the bars is based on the
+					<strong>barsData</strong>. The max height of each bar is
+					defined by <strong>$maxHeight(...)</strong>, while the space
+					between the bars is determined by
+					<strong>$yOffset(...)</strong>.
+				</p>
+				<pre class="code-example">
+container("bar-1", _ => {
+    _.addVisuals([
+        bars(barsData, [$maxHeight(50), $yOffset(30), $width(150)])
+    ])
+}, $id("example-bar-1"));</pre
+				>
+			</li>
+
+			<li>
+				<h2>Bar Example 2: Horizontally shifted</h2>
+				<div id="example-bar-2" class="container"></div>
+				<p class="desc">
+					In this example, the bars are being horizontally shifted by
+					<strong>$xOffset(...)</strong>.
+				</p>
+				<pre class="code-example">
+container("bar-2", _ => {
+    _.addVisuals([
+        bars(barsData, [$maxHeight(50), $xOffset(30), $width(150), $yOffset(30)])
+    ])
+}, $id("example-bar-2"));</pre
+				>
+			</li>
+
+			<li>
+				<h2>Bar Example 3: Data-driven length</h2>
+				<div id="example-bar-3" class="container ex-tiny"></div>
+				<p class="desc">A very basic horizontal bar chart.</p>
+				<pre class="code-example">
+container("bar-3", _ => {
+    _.addVisuals([
+        bars($data(barsData.rawData(), "width"), [$maxWidth(50), $yOffset(30), $height(20)])
+    ])
+}, $id("example-bar-3"));</pre
+				>
+			</li>
+
+			<li>
+				<h2>Bar Example 4: Aligned right</h2>
+				<div id="example-bar-4" class="container ex-tiny"></div>
+				<p class="desc">
+					A very basic horizontal bar chart. However, now we have
+					aligned it right by using
+					<strong>$alignRight(...)</strong>.
+				</p>
+				<pre class="code-example">
+container("bar-4", _ => {
+    _.addVisuals([
+        bars($data(barsData.rawData(), "width"), [$maxWidth(50), $alignRight(), $yOffset(30), $height(20)])
+    ])
+}, $id("example-bar-4"));</pre
+				>
+			</li>
+
+			<li>
+				<h2>Bar Example 5: Horizontal orientation</h2>
+				<div id="example-bar-5" class="container ex-tiny"></div>
+				<pre class="code-example">
+container("bar-5", _ => {
+    _.addVisuals([
+        bars(barsData, [$maxHeight(50), $xOffset(30), $width(15)])
+    ])
+}, $id("example-bar-5"));</pre
+				>
+			</li>
+
+			<li>
+				<h2>Bar Example 6: Aligned to base</h2>
+				<div id="example-bar-6" class="container ex-tiny"></div>
+				<p class="desc">
+					We can align the typical bar chart by using
+					<strong>$alignBottom(...)</strong>.
+				</p>
+				<pre class="code-example">
+container("bar-6", _ => {
+    _.addVisuals([
+        bars(barsData, [$maxHeight(50), $alignBottom(100), $xOffset(30), $width(15)])
+    ])
+}, $id("example-bar-6"));</pre
+				>
+			</li>
+		</ul>
+
+		<a name="ellipses"></a>
+		<ul class="examples-containers">
+			<li>
+				<h2>Ellipse Example 1</h2>
+				<div id="example-ellipses-1" class="container ex-tiny"></div>
+				<pre class="code-example">
+container("ellipses-1", _ => {
+    _.addVisuals([
+        ellipses(ellipsesData1, [$group("c4-e1"), $y(50), $x(30), $xOffset(70), $max(30)])
+    ]);
+}, $id("example-ellipses-1"));</pre
+				>
+			</li>
+
+			<li>
+				<h2>Ellipse Example 2: Concentric Ellipses</h2>
+				<div id="example-ellipses-2" class="container ex-tiny"></div>
+				<pre class="code-example">
+container("ellipses-2", _ => {
+    _.addVisuals([
+        ellipses(ellipsesData1, [$group("c5-e1"), $y(50), $x(40), $xOffset(80), $max(20)]),
+        ellipses(ex4EllipsesData2, [$group("c5-e2"), $y(50), $x(40), $xOffset(80), $max(40)]),
+        ellipses(ex4EllipsesData3, [$group("c5-e3"), $y(50), $x(40), $xOffset(80), $max(30)]),
+        ellipses(ex4EllipsesData4, [$group("c5-e4"), $y(50), $x(40), $xOffset(80), $max(15)]),
+    ]);
+}, $id("example-ellipses-2"));</pre
+				>
+			</li>
+		</ul>
+
+		<a name="arcs"></a>
+		<ul class="examples-containers">
+			<li>
+				<h2>Arc Example 1</h2>
+				<div id="example-arc-1" class="container ex-short"></div>
+				<p class="desc">
+					The result of
+					<strong>$arcRadiusOffset(...)</strong> vs.
+					<strong>$arcSpanOffset(...)</strong>.
+				</p>
+				<pre class="code-example">
+container("arc-1", _ => {
+    _.addVisuals([
+        arcs(exArcData1, [$x(100), $y(100), $arcSpanUnit(60), $arcRadius(50), $arcRadiusOffset(5)]),
+        arcs(exArcData1, [$x(250), $y(100), $arcSpanUnit(60), $arcSpanOffset(10), $arcRadius(50)]),
+    ]);
+}, $id("example-arc-1"));</pre
+				>
+			</li>
+
+			<li>
+				<h2>Arc Example 2</h2>
+				<div id="example-arc-2" class="container ex-short"></div>
+				<p class="desc">When combined.</p>
+				<pre class="code-example">
+container("arc-2", _ => {
+    _.addVisuals([
+        arcs(exArcData1, [$x(100), $y(100), $arcSpanUnit(60), $arcSpanOffset(10), $arcRadius(50), $arcRadiusOffset(5)]),
+    ]);
+}, $id("example-arc-2"));</pre
+				>
+			</li>
+
+			<li>
+				<h2>Arc Example 3</h2>
+				<div id="example-arc-3" class="container ex-short"></div>
+				<p class="desc">
+					We can also rotate the arcs around their origin with
+					<strong>$arcRotateBy(...)</strong>.
+				</p>
+				<pre class="code-example">
+container("arc-3", _ => {
+    _.addVisuals([
+        arcs(exArcData1, [$x(100), $y(100), $arcSpanUnit(60), $arcRadius(50), $arcRadiusOffset(5), $arcRotateBy(30)]),
+        arcs(exArcData1, [$x(250), $y(100), $arcSpanUnit(60), $arcSpanOffset(10), $arcRadius(50), $arcRotateBy(30)]),
+        arcs(exArcData1, [$x(400), $y(100), $arcSpanUnit(60), $arcSpanOffset(10), $arcRadius(50), $arcRadiusOffset(5), $arcRotateBy(30)]),
+    ]);
+}, $id("example-arc-3"));</pre
+				>
+			</li>
+
+			<li>
+				<h2>Arc Example 4</h2>
+				<div id="example-arc-4" class="container ex-short"></div>
+				<p class="desc">
+					We can apply custom intents to each arc with
+					<strong>$arcLambda(...)</strong>.
+				</p>
+				<pre class="code-example">
+container("arc-4", _ => {
+    _.addVisuals([
+        arcs(exArcData1, [
+            $x(80), $y(100), $arcSpanUnit(60), $arcSpanOffset(10),
+            <strong>$arcLambda</strong>({radius: 50, maxWidth: 3}, (intent, v, i) => {
+                let base = i / (exArcData1.data.length * 1.0);
+                v.$strokeColor(hsl(base));
+                v.$strokeWidth(intent.data.maxWidth);
+                v.$radius(intent.data.radius + intent.data.maxWidth * v._dataValue / 2.0 + 5);
+            }),
+        ]),
+
+        arcs(exArcData1, [
+            $x(250), $y(100), $arcSpanUnit(60), $arcSpanOffset(10),
+            <strong>$arcLambda</strong>({radius: 50, maxWidth: 3}, (intent, v, i) => {
+                let base = i / (exArcData1.data.length * 1.0);
+                v.$strokeColor(hsl(base));
+                v.$radius(intent.data.radius + intent.data.maxWidth * v._dataValue / 2.0 + 5);
+                v.$strokeWidth(intent.data.maxWidth + intent.data.maxWidth * base * 10);
+            }),
+        ]),
+
+        arcs(exArcData1, [
+            $x(400), $y(100), $arcSpanUnit(60), $arcSpanOffset(0),
+            <strong>$arcLambda</strong>({radius: 50, maxWidth: 5, colors: colorsData}, (intent, v, i) => {
+                let strokeWidth = intent.data.maxWidth / v._dataValue;
+                v.$attr("stroke-linecap", "butt");
+                v.$strokeWidth(strokeWidth);
+                v.$strokeColor(intent.data.colors[i]);
+                v.$radius(intent.data.radius + intent.data.maxWidth * v._dataValue / 2.0 + 5);
+            }),
+        ]),
+    ])
+}, $id("example-arc-4"));</pre
+				>
+			</li>
+		</ul>
+
+		<a name="segments"></a>
+		<ul class="examples-containers">
+			<li>
+				<h2>Segments</h2>
+				<p class="desc">
+					The <strong>segments</strong> visual works with the various
+					arc intents.
+				</p>
+				<div id="example-segments" class="container"></div>
+				<p class="desc">
+					Mouse-over the segments for the relevant code snippets
+				</p>
+
+				<pre id="segments-code-preview" class="code-example">
+segments(exSegmentData1, [...])
+</pre
+				>
+			</li>
+		</ul>
+
+		<a name="chords"></a>
+		<ul class="examples-containers">
+			<li>
+				<h2>Chords</h2>
+				<p class="desc">
+					Another family member of the arcs is the
+					<strong>chords</strong> visual.
+				</p>
+				<div id="example-chords" class="container"></div>
+				<p class="desc">
+					Mouse-over the segments for the relevant code snippets
+				</p>
+
+				<pre id="chords-code-preview" class="code-example">
+chords(exChordData1, [...])
+</pre
+				>
+			</li>
+		</ul>
+
+		<a name="polygons"></a>
+		<ul class="examples-containers">
+			<li>
+				<h2>Polygons</h2>
+				<p class="desc">
+					The <strong>polygon</strong> visual works with the various
+					arc intents.
+				</p>
+				<div id="example-polygon" class="container"></div>
+				<p class="desc">
+					Mouse-over the segments for the relevant code snippets
+				</p>
+
+				<pre id="segments-code-preview" class="code-example">
+polygon(exSegmentData1, [...])
+</pre
+				>
+			</li>
+		</ul>
+
+		<a name="radial-lines"></a>
+		<ul class="examples-containers">
+			<li>
+				<h2>Radial Lines</h2>
+				<p class="desc">
+					The <strong>radialLines</strong> visual works with the
+					various arc intents.
+				</p>
+				<div id="example-radial-lines" class="container"></div>
+				<p class="desc">
+					Mouse-over the segments for the relevant code snippets
+				</p>
+
+				<pre id="radial-lines-code-preview" class="code-example">
+radialLines(exSegmentData1, [...])
+</pre
+				>
+			</li>
+		</ul>
+
+		<a name="prect"></a>
+		<ul class="examples-containers">
+			<li>
+				<h2>Path Rect</h2>
+				<p class="desc">
+					Rect made from Path with independent rounded cornders
+				</p>
+				<div id="example-prect" class="container"></div>
+				<p class="desc">
+					Mouse-over the segments for the relevant code snippets
+				</p>
+
+				<pre id="prect-code-preview" class="code-example">
+prect(exSegmentData1, [...])
+</pre
+				>
+			</li>
+		</ul>
+
+		<a name="advanced"></a>
+		<ul class="examples-containers">
+			<li>
+				<h2>Advanced Example</h2>
+				<div id="example-advanced-1" class="container"></div>
+				<p class="desc">
+					When used together, we can easily create interesting
+					visuals.
+				</p>
+				<pre class="code-example">
+container("advanced-1", _ => {
+    _.addVisuals([
+        <strong>bars</strong>(barsData, [$group("c6-be"), $maxHeight(50), $y(50), $yOffset(30), $width(150)]),
+        <strong>ellipses</strong>(ex6EllipsesData1, [$group("c6-e1"), $maxDiameter(50), $y(50), $cyOffset(30), $x(150)]),
+        <strong>ellipses</strong>(ex6EllipsesData2, [$group("c6-e2"), $maxDiameter(60), $y(55), $cyOffset(80), $x(400)]),
+        <strong>connectingLines</strong>(linesData1, [$joinGroupItems(["c6-e1", "c6-e2"]), $group("c6-e3"), $maxStrokeWidth(15)]),
+    ])
+    _.onRenderCompleted(() => {
+        $moveBelow("c6-e3", "c6-be")
+    })
+}, $id("example-advanced-1"));</pre
+				>
+			</li>
+		</ul>
