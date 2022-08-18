@@ -2,11 +2,90 @@ import utils from "./utils.js"
 
 const chartHeight = 250;
 const chartWidth = 350;
-const xMargin = 35;
+const xMargin = 45;
 const yMargin = chartHeight + 50;
 
 const chartXLegend = chartWidth + xMargin + 25
 const chartYLegend = 100
+
+function xAxis(xIncrement, itemCount, weekData) {
+    return gtap.$hLine([
+        gtap.$xMargin(xMargin),
+        gtap.$width(chartWidth),
+        gtap.$y(yMargin),
+        gtap.$tickMarks(itemCount, xIncrement, gtap.ellipseTicks("fill: #EB395A;"),
+            { xMargin: 0 }),
+        gtap.$tickMarkText(itemCount, xIncrement, index => `${weekData[index]}`, tick => {
+            tick.alignWithAngle(0);
+            tick.label.$style(`stroke: none; fill:#767A8F; font-size:0.6em;`);
+            tick.label.$textAnchor('middle');
+        }, { xMargin: 0, yMargin: 15 })
+    ])
+}
+
+function xAxisName() {
+    return gtap.$label("Weeks", [
+        gtap.$xMargin(chartWidth + xMargin - 17),
+        gtap.$y(yMargin + 28),
+        gtap.$style(`stroke: none; fill:#767A8F; font-size:0.5em;`),
+    ])
+}
+
+function yAxis(yTickCount, yTickSpace, yIndexer, axisName) {
+    return gtap.$vLine([
+        gtap.$xMargin(xMargin),
+        gtap.$height(chartHeight),
+        gtap.$alignBottom(yMargin),
+        gtap.$tickMarkText(yTickCount, yTickSpace, index => `${yIndexer(index)}`, tick => {
+            tick.label.$style(`stroke: none; fill:#767A8F; font-size:0.6em;`);
+            tick.label.$textAnchor('end');
+            tick.alignWithAngle(270);
+            console.log(tick)
+            if (tick.tickIndex == (yTickCount - 1)) {
+                tick.label.$text(`${axisName}${tick.label.$text()}`)
+            }
+        }, { xMargin: -5, yMargin: chartHeight + 4 })
+    ])
+}
+
+function horizontalGridLines(yTickCount, yTickSpace) {
+    return gtap.$bars(gtap.$dataWithIncrement(yTickCount, yTickSpace), [
+        gtap.$xMargin(xMargin + 1),
+        gtap.$width(chartWidth - 2),
+        gtap.$css("none"),
+        gtap.$maxY(-chartHeight),
+        gtap.$yMargin(yMargin),
+        gtap.$height(1),
+        gtap.$lambda((v, index) => {
+            if (index % 2 == 0) {
+                v.$style("fill: #f0f0f0; stroke:1;")
+            } else {
+                v.$style("fill: #f7f7f7; stroke:1;")
+            }
+        })
+    ])
+}
+
+function chartLegend(textArray, colors) {
+    return gtap.$wrappedShape(gtap.pointNode, gtap.$dataWithIncrement(textArray.length, 1), [
+        gtap.$x(chartXLegend),
+        gtap.$y(chartYLegend),
+        gtap.$yIncrement(15),
+        gtap.$lambda((v, index) => {
+            const e = gtap.text(v.$parentElm);
+            e.$x(v.$x());
+            e.$y(v.$y());
+            e.$text(textArray[index]);
+            e.$style(`stroke: none; fill:#767A8F; font-size:0.7em; font-weight: 600;`);
+
+            const e2 = gtap.ellipse(v.$parentElm);
+            e2.$x(v.$x() - 5);
+            e2.$y(v.$y() - 4);
+            e2.$size(2, 2);
+            e2.$style(`stroke: none; fill:${colors[index]};`);
+        })
+    ])
+}
 
 function renderChangeData(priceData) {
     const colors = ["#7EADB9", "#FFD797"];
@@ -28,67 +107,15 @@ function renderChangeData(priceData) {
 
     const yTickCount = 10
     const yTickSpace = chartHeight / yTickCount
-    const yIndexer = (index) => { return (index + 1) * yTickSpace * max_high / chartHeight };
+    const yIndexer = (index) => { return 100 * (index + 1) * yTickSpace * max_high / chartHeight };
 
     let ctx = gtap.container("change-1", gtap.$id("change-chart"));
     gtap.renderVisuals(ctx, [
-        // X-Axis
-        gtap.$hLine([
-            gtap.$xMargin(xMargin),
-            gtap.$width(chartWidth),
-            gtap.$y(yMargin),
-            gtap.$tickMarks(itemCount, xIncrement, gtap.ellipseTicks("fill: #EB395A;"),
-                { xMargin: 0 }),
-            gtap.$tickMarkText(itemCount, xIncrement, index => `${weekData[index]}`, tick => {
-                tick.alignWithAngle(0);
-                tick.label.$style(`stroke: none; fill:#767A8F; font-size:0.6em;`);
-                tick.label.$textAnchor('middle');
-            }, { xMargin: 0, yMargin: 15 })
-        ]),
-
-        // X-axis name
-        gtap.$label("Weeks", [
-            gtap.$xMargin(chartWidth + xMargin - 17),
-            gtap.$y(yMargin + 28),
-            gtap.$style(`stroke: none; fill:#767A8F; font-size:0.5em;`),
-        ]),
-
-        // Y-Axis
-        gtap.$vLine([
-            gtap.$xMargin(xMargin),
-            gtap.$height(chartHeight),
-            gtap.$alignBottom(yMargin),
-            gtap.$tickMarkText(yTickCount, yTickSpace, index => `${yIndexer(index) * 100}`, tick => {
-                tick.label.$style(`stroke: none; fill:#767A8F; font-size:0.6em;`);
-                tick.label.$textAnchor('end');
-                tick.alignWithAngle(270);
-            }, { xMargin: -10, yMargin: chartHeight + 4 })
-        ]),
-
-        // Y-axis name
-        gtap.$label("%", [
-            gtap.$xMargin(xMargin - 9),
-            gtap.$height(chartHeight),
-            gtap.$alignBottom(yMargin + 3),
-            gtap.$style(`stroke: none; fill:#767A8F; font-size:0.5em;`),
-        ]),
-
-        // horizontal grid lines
-        gtap.$bars(gtap.$dataWithIncrement(yTickCount, yTickSpace), [
-            gtap.$xMargin(xMargin + 1),
-            gtap.$width(chartWidth - 2),
-            gtap.$css("none"),
-            gtap.$maxY(-chartHeight),
-            gtap.$yMargin(yMargin),
-            gtap.$height(1),
-            gtap.$lambda((v, index) => {
-                if (index % 2 == 0) {
-                    v.$style("fill: #f0f0f0; stroke:1;")
-                } else {
-                    v.$style("fill: #f7f7f7; stroke:1;")
-                }
-            })
-        ]),
+        xAxis(xIncrement, itemCount, weekData),
+        xAxisName(),
+        yAxis(yTickCount, yTickSpace, yIndexer, "%"),
+        horizontalGridLines(yTickCount, yTickSpace),
+        chartLegend(textArray, colors),
 
         // MaxHigh_MinLow
         gtap.$polygon(maxHighMinLowData, [
@@ -128,31 +155,12 @@ function renderChangeData(priceData) {
             gtap.$style(`stroke:${colors[textArray.indexOf("MeanHigh_MeanLow")]};stroke-width:2`),
         ]),
 
-        // Legend
-        gtap.$wrappedShape(gtap.pointNode, gtap.$dataWithIncrement(textArray.length, 1), [
-            gtap.$x(chartXLegend),
-            gtap.$y(chartYLegend),
-            gtap.$yIncrement(15),
-            gtap.$lambda((v, index) => {
-                const e = gtap.text(v.$parentElm);
-                e.$x(v.$x());
-                e.$y(v.$y());
-                e.$text(textArray[index]);
-                e.$style(`stroke: none; fill:#767A8F; font-size:0.7em; font-weight: 600;`);
-
-                const e2 = gtap.ellipse(v.$parentElm);
-                e2.$x(v.$x() - 5);
-                e2.$y(v.$y() - 5);
-                e2.$size(2, 2);
-                e2.$style(`stroke: none; fill:${colors[index]};`);
-            })
-        ]),
     ]);
 }
 
 function renderPriceData(priceData) {
     const textArray = ["Max_High", "Mean_High", "Mean_Intra_Day", "Mean_Low", "Min_Low"];
-    const colors = ["#ED9FA2", "Purple", "Red", "Orange", "#ED9FA2"];
+    const colors = ["#ED9FA2", "Purple", "Red", "Orange", "Green"];
 
     let list, minValue;
 
@@ -185,6 +193,7 @@ function renderPriceData(priceData) {
     // const max_high = Math.ceil(maxHighData.max());
     const maxHigh = maxHighData.max();
     // const minLow = minLowData.min();
+    const itemCount = maxHighData.itemCount();
 
     const yTickCount = 10
     const yTickSpace = chartHeight * 1 / yTickCount
@@ -198,62 +207,15 @@ function renderPriceData(priceData) {
 
     let ctx = gtap.container("line-1", gtap.$id("line-chart"));
     gtap.renderVisuals(ctx, [
-        // X-Axis
-        gtap.$hLine([
-            gtap.$y(yMargin),
-            gtap.$xMargin(xMargin),
-            gtap.$width(chartWidth),
-            gtap.$tickMarks(maxHighData.itemCount(), xIncrement, gtap.ellipseTicks("fill: #EB395A;"),
-                { xMargin: 0 }),
-            gtap.$tickMarkText(maxHighData.itemCount(), xIncrement, index => `${weekData[index]}`, tick => {
-                tick.alignWithAngle(0);
-                tick.label.$textAnchor('middle');
-                tick.label.$style(`stroke: none; fill:#767A8F; font-size:0.6em;`);
-            }, { xMargin: 0, yMargin: 15 })
-        ]),
-
-        // X-axis name
-        gtap.$label("Weeks", [
-            gtap.$xMargin(chartWidth + xMargin - 17),
-            gtap.$y(yMargin + 28),
-            gtap.$style(`stroke: none; fill:#767A8F; font-size:0.5em;`),
-        ]),
-
-
-        // Y-Axis
-        gtap.$vLine([
-            gtap.$xMargin(xMargin),
-            gtap.$y(yMargin),
-            gtap.$height(chartHeight),
-            gtap.$alignBottom(yMargin),
-            gtap.$tickMarkText(yTickCount, yTickSpace, index => `${yIndexer(index)}`, tick => {
-                tick.alignWithAngle(270);
-                tick.label.$textAnchor('end');
-                tick.label.$style(`stroke: none; fill:#767A8F; font-size:0.6em;`);
-            }, { xMargin: -5, yMargin: chartHeight })
-        ]),
-
-        // horizontal grid lines
-        gtap.$bars(gtap.$dataWithIncrement(yTickCount, yTickSpace), [
-            gtap.$xMargin(xMargin + 1),
-            gtap.$width(chartWidth - 2),
-            gtap.$css("none"),
-            gtap.$maxY(-chartHeight),
-            gtap.$yMargin(yMargin),
-            gtap.$height(1),
-            gtap.$lambda((v, index) => {
-                if (index % 2 == 0) {
-                    v.$style("fill: #f0f0f0; stroke:1;")
-                } else {
-                    v.$style("fill: #f7f7f7; stroke:1;")
-                }
-            })
-        ]),
+        xAxis(xIncrement, itemCount, weekData),
+        xAxisName(),
+        yAxis(yTickCount, yTickSpace, yIndexer, "$"),
+        horizontalGridLines(yTickCount, yTickSpace),
 
         // Background highlight
         gtap.$bars(gtap.$dataWithIncrement(maxHighData.itemCount(), 1), [
-            gtap.$width(xIncrement - 2),
-            gtap.$x((xIncrement - 2) * .5),
+            gtap.$width(xIncrement),
+            gtap.$x((xIncrement) * .5),
             gtap.$xMargin(xMargin),
             gtap.$xIncrement(xIncrement),
             gtap.$height(chartHeight),
@@ -287,7 +249,7 @@ function renderPriceData(priceData) {
         // ]),
 
         // Max_High 2
-        gtap.$lines(maxHighData, [
+        gtap.$polygon(maxHighData, [
             gtap.$x(xIncrement),
             gtap.$xMargin(xMargin),
             gtap.$xIncrement(xIncrement),
@@ -297,12 +259,14 @@ function renderPriceData(priceData) {
             }),
         ], {
             isConnected: true,
+            curveLength: 3,
+
         }).withPostActions([
-            gtap.$style(`stroke-linecap:round;stroke:${'orange'};stroke-width:4`),
+            gtap.$style(`stroke-linecap:round;fill:none;stroke:${colors[textArray.indexOf("Max_High")]};stroke-width:1`),
         ]),
 
         // Min_Low - 2
-        gtap.$lines(minLowData, [
+        gtap.$polygon(minLowData, [
             gtap.$x(xIncrement),
             gtap.$xMargin(xMargin),
             gtap.$xIncrement(xIncrement),
@@ -312,8 +276,10 @@ function renderPriceData(priceData) {
             })
         ], {
             isConnected: true,
+            curveLength: 3,
+
         }).withPostActions([
-            gtap.$style(`stroke-linecap:round;stroke:${'green'};stroke-width:4`),
+            gtap.$style(`stroke-linecap:round;fill:none;stroke:${colors[textArray.indexOf("Min_Low")]};stroke-width:1`),
             // gtap.$style(`stroke-linecap:round;stroke:${colors[textArray.indexOf("Min_Low")]};stroke-width:2`),
         ]),
 
@@ -427,9 +393,9 @@ function showPriceDetails(e, context) {
     const dataPoint = context.priceData[context.dataIndex];
 
     setLegend("Max_High", dataPoint.Max_High);
-    // setLegend("Mean_High", dataPoint.Mean_High);
-    // setLegend("Mean_Intra_Day", dataPoint.Mean_Intra_Day);
-    // setLegend("Mean_Low", dataPoint.Mean_Low);
+    setLegend("Mean_High", dataPoint.Mean_High);
+    setLegend("Mean_Intra_Day", dataPoint.Mean_Intra_Day);
+    setLegend("Mean_Low", dataPoint.Mean_Low);
     setLegend("Min_Low", dataPoint.Min_Low);
 
     context.v.$style(`stroke: none; fill:#f0f0f0;`);
