@@ -16,8 +16,11 @@ function renderChangeData(priceData) {
     let maxHighMinLowData = gtap.$data(priceData.map(s => s.MaxHigh_MinLow));
     let meanHighMeanLowData = gtap.$data(priceData.map(s => s.MeanHigh_MeanLow));
 
-    maxHighMinLowData.forcedMax(1)
-    meanHighMeanLowData.forcedMax(1)
+    let maxData = maxHighMinLowData.max()
+
+    maxData = maxData > 1 ? maxData : 1
+    maxHighMinLowData.forcedMax(maxData)
+    meanHighMeanLowData.forcedMax(maxData)
 
     const xIncrement = chartWidth / maxHighMinLowData.itemCount();
     const max_high = Math.ceil(maxHighMinLowData.max());
@@ -151,30 +154,47 @@ function renderPriceData(priceData) {
     const textArray = ["Max_High", "Mean_High", "Mean_Intra_Day", "Mean_Low", "Min_Low"];
     const colors = ["#ED9FA2", "Purple", "Red", "Orange", "#ED9FA2"];
 
-    console.log("[renderPriceData] priceData:", priceData)
-    let weekData = priceData.map(s => s.Week);
-    let maxHighData = gtap.$data(priceData.map(s => s.Max_High));
-    let meanHighData = gtap.$data(priceData.map(s => s.Mean_High));
-    let meanIntraDayData = gtap.$data(priceData.map(s => s.Mean_Intra_Day));
-    let meanLowData = gtap.$data(priceData.map(s => s.Mean_Low));
-    let minLowData = gtap.$data(priceData.map(s => s.Min_Low));
+    let list, minValue;
 
-    meanHighData.forcedMax(maxHighData.max())
-    meanIntraDayData.forcedMax(maxHighData.max())
-    meanLowData.forcedMax(maxHighData.max())
+    list = priceData.map(s => s.Min_Low)
+    minValue = Math.min(...list, [Number.POSITIVE_INFINITY])
+    list = list.map(i => i - minValue)
+    // console.log("minValue:", minValue, "zeroed Min_Low: ", list);
+    let minLowData = gtap.$data(list);
+
+    list = priceData.map(s => s.Max_High)
+    // minValue = Math.min(...list, [Number.POSITIVE_INFINITY])
+    list = list.map(i => i - minValue)
+    // console.log("minValue:", minValue, "zeroed Max_High: ", list);
+    let maxHighData = gtap.$data(list);
+
+
+    let weekData = priceData.map(s => s.Week);
+    // let maxHighData = gtap.$data(priceData.map(s => s.Max_High));
+    // let meanHighData = gtap.$data(priceData.map(s => s.Mean_High));
+    // let meanIntraDayData = gtap.$data(priceData.map(s => s.Mean_Intra_Day));
+    // let meanLowData = gtap.$data(priceData.map(s => s.Mean_Low));
+    // let minLowData = gtap.$data(priceData.map(s => s.Min_Low));
+
+    // meanHighData.forcedMax(maxHighData.max())
+    // meanIntraDayData.forcedMax(maxHighData.max())
+    // meanLowData.forcedMax(maxHighData.max())
     minLowData.forcedMax(maxHighData.max())
 
     const xIncrement = chartWidth / maxHighData.itemCount();
     // const max_high = Math.ceil(maxHighData.max());
-    const max_high = maxHighData.max();
+    const maxHigh = maxHighData.max();
+    // const minLow = minLowData.min();
 
     const yTickCount = 10
-    const yTickSpace = chartHeight / yTickCount
-    const yIndexer = (index) => {
-        const val = (max_high / yTickCount) * (index + 1);
+    const yTickSpace = chartHeight * 1 / yTickCount
 
-        return val.toFixed(2)
+    const yIndexer = (index) => {
+        const val = minValue + (maxHigh) / yTickCount * (index + 1);
+        return (val * 1.0).toFixed(2);
     };
+
+    console.log("maxHigh + minValue:", maxHigh + minValue)
 
     let ctx = gtap.container("line-1", gtap.$id("line-chart"));
     gtap.renderVisuals(ctx, [
@@ -254,82 +274,114 @@ function renderPriceData(priceData) {
 
 
         // Max_High
+        // gtap.$lines(maxHighData, [
+        //     gtap.$x(xIncrement),
+        //     gtap.$xMargin(xMargin),
+        //     gtap.$xIncrement(xIncrement),
+        //     gtap.$maxY(-chartHeight),
+        //     gtap.$yMargin(yMargin),
+        // ], {
+        //     isConnected: true,
+        // }).withPostActions([
+        //     gtap.$style(`stroke-linecap:round;stroke:${colors[textArray.indexOf("Max_High")]};stroke-width:2`),
+        // ]),
+
+        // Max_High 2
         gtap.$lines(maxHighData, [
             gtap.$x(xIncrement),
             gtap.$xMargin(xMargin),
             gtap.$xIncrement(xIncrement),
-            gtap.$maxY(-chartHeight),
-            gtap.$yMargin(yMargin),
+            gtap.$lambda((v, index, d) => {
+                const yOffset = 0//chartHeight * .15
+                v.$y((1 - v.getDataValue()) * chartHeight * 1 + 50 + yOffset / 2.0)
+            }),
         ], {
             isConnected: true,
         }).withPostActions([
-            gtap.$style(`stroke-linecap:round;stroke:${colors[textArray.indexOf("Max_High")]};stroke-width:2`),
+            gtap.$style(`stroke-linecap:round;stroke:${'orange'};stroke-width:4`),
         ]),
 
-        // Mean_High
-        gtap.$lines(meanHighData, [
-            gtap.$x(xIncrement),
-            gtap.$xMargin(xMargin),
-            gtap.$xIncrement(xIncrement),
-            gtap.$maxY(-chartHeight),
-            gtap.$yMargin(yMargin),
-        ], {
-            isConnected: true,
-        }).withPostActions([
-            gtap.$style(`stroke-linecap:round;stroke:${colors[textArray.indexOf("Mean_High")]};stroke-width:2`),
-        ]),
-
-        // Mean_Intra_Day
-        gtap.$lines(meanIntraDayData, [
-            gtap.$x(xIncrement),
-            gtap.$xMargin(xMargin),
-            gtap.$xIncrement(xIncrement),
-            gtap.$maxY(-chartHeight),
-            gtap.$yMargin(yMargin),
-        ], {
-            isConnected: true,
-        }).withPostActions([
-            gtap.$style(`stroke-linecap:round;stroke:${colors[textArray.indexOf("Mean_Intra_Day")]};stroke-width:2`),
-        ]),
-
-        // Mean_Low
-        gtap.$lines(meanLowData, [
-            gtap.$x(xIncrement),
-            gtap.$xMargin(xMargin),
-            gtap.$xIncrement(xIncrement),
-            gtap.$maxY(-chartHeight),
-            gtap.$yMargin(yMargin),
-        ], {
-            isConnected: true,
-        }).withPostActions([
-            gtap.$style(`stroke-linecap:round;stroke:${colors[textArray.indexOf("Mean_Low")]};stroke-width:2`),
-        ]),
-
-        // Min_Low
+        // Min_Low - 2
         gtap.$lines(minLowData, [
             gtap.$x(xIncrement),
             gtap.$xMargin(xMargin),
             gtap.$xIncrement(xIncrement),
-            gtap.$maxY(-chartHeight),
-            gtap.$yMargin(yMargin),
+            gtap.$lambda((v, index, d) => {
+                const yOffset = 0//chartHeight * .15
+                v.$y((1 - v.getDataValue()) * chartHeight * 1 + 50 + yOffset / 2.0)
+            })
         ], {
             isConnected: true,
-            // pointActions: [
-            //     gtap.$lambda((v, index) => {
-            //         // const val = parseInt(minLowData.rawItemAtIndex(index))
-            //         const val = minLowData.rawItemAtIndex(index)
-            //         const node = gtap.text(v.$parentElm)
-            //         node.$x(v.$x());
-            //         node.$y(v.$y());
-            //         node.$textAnchor("middle");
-            //         node.$vAlign("middle");
-            //         node.$style("fill:#777; font-size:0.6em;")
-            //         node.$text(val);
-            //     })
-            // ]
         }).withPostActions([
-            gtap.$style(`stroke-linecap:round;stroke:${colors[textArray.indexOf("Min_Low")]};stroke-width:2`),
+            gtap.$style(`stroke-linecap:round;stroke:${'green'};stroke-width:4`),
+            // gtap.$style(`stroke-linecap:round;stroke:${colors[textArray.indexOf("Min_Low")]};stroke-width:2`),
         ]),
+
+        // // Mean_High
+        // gtap.$lines(meanHighData, [
+        //     gtap.$x(xIncrement),
+        //     gtap.$xMargin(xMargin),
+        //     gtap.$xIncrement(xIncrement),
+        //     gtap.$maxY(-chartHeight),
+        //     gtap.$yMargin(yMargin),
+        // ], {
+        //     isConnected: true,
+        // }).withPostActions([
+        //     gtap.$style(`stroke-linecap:round;stroke:${colors[textArray.indexOf("Mean_High")]};stroke-width:2`),
+        // ]),
+
+        // // Mean_Intra_Day
+        // gtap.$lines(meanIntraDayData, [
+        //     gtap.$x(xIncrement),
+        //     gtap.$xMargin(xMargin),
+        //     gtap.$xIncrement(xIncrement),
+        //     gtap.$maxY(-chartHeight),
+        //     gtap.$yMargin(yMargin),
+        // ], {
+        //     isConnected: true,
+        // }).withPostActions([
+        //     gtap.$style(`stroke-linecap:round;stroke:${colors[textArray.indexOf("Mean_Intra_Day")]};stroke-width:2`),
+        // ]),
+
+        // // Mean_Low
+        // gtap.$lines(meanLowData, [
+        //     gtap.$x(xIncrement),
+        //     gtap.$xMargin(xMargin),
+        //     gtap.$xIncrement(xIncrement),
+        //     gtap.$maxY(-chartHeight),
+        //     gtap.$yMargin(yMargin),
+        // ], {
+        //     isConnected: true,
+        // }).withPostActions([
+        //     gtap.$style(`stroke-linecap:round;stroke:${colors[textArray.indexOf("Mean_Low")]};stroke-width:2`),
+        // ]),
+
+        // Min_Low
+        // gtap.$lines(minLowData, [
+        //     gtap.$x(xIncrement),
+        //     gtap.$xMargin(xMargin),
+        //     gtap.$xIncrement(xIncrement),
+        //     gtap.$maxY(-chartHeight),
+        //     gtap.$yMargin(yMargin),
+        // ], {
+        //     isConnected: true,
+        //     // pointActions: [
+        //     //     gtap.$lambda((v, index) => {
+        //     //         // const val = parseInt(minLowData.rawItemAtIndex(index))
+        //     //         const val = minLowData.rawItemAtIndex(index)
+        //     //         const node = gtap.text(v.$parentElm)
+        //     //         node.$x(v.$x());
+        //     //         node.$y(v.$y());
+        //     //         node.$textAnchor("middle");
+        //     //         node.$vAlign("middle");
+        //     //         node.$style("fill:#777; font-size:0.6em;")
+        //     //         node.$text(val);
+        //     //     })
+        //     // ]
+        // }).withPostActions([
+        //     gtap.$style(`stroke-linecap:round;stroke:${'red'};stroke-width:2`),
+        //     // gtap.$style(`stroke-linecap:round;stroke:${colors[textArray.indexOf("Min_Low")]};stroke-width:2`),
+        // ]),
 
         // Legend
         gtap.$wrappedShape(gtap.pointNode, gtap.$dataWithIncrement(textArray.length, 1), [
@@ -375,9 +427,9 @@ function showPriceDetails(e, context) {
     const dataPoint = context.priceData[context.dataIndex];
 
     setLegend("Max_High", dataPoint.Max_High);
-    setLegend("Mean_High", dataPoint.Mean_High);
-    setLegend("Mean_Intra_Day", dataPoint.Mean_Intra_Day);
-    setLegend("Mean_Low", dataPoint.Mean_Low);
+    // setLegend("Mean_High", dataPoint.Mean_High);
+    // setLegend("Mean_Intra_Day", dataPoint.Mean_Intra_Day);
+    // setLegend("Mean_Low", dataPoint.Mean_Low);
     setLegend("Min_Low", dataPoint.Min_Low);
 
     context.v.$style(`stroke: none; fill:#f0f0f0;`);
@@ -387,9 +439,9 @@ function hidePriceDetails(e, context) {
     gtap.$stopMouseDefaults(e);
 
     setLegend("Max_High");
-    setLegend("Mean_High");
-    setLegend("Mean_Intra_Day");
-    setLegend("Mean_Low");
+    // setLegend("Mean_High");
+    // setLegend("Mean_Intra_Day");
+    // setLegend("Mean_Low");
     setLegend("Min_Low");
 
     context.v.$style(`stroke: none; fill:#767A8F00;`);
@@ -397,7 +449,7 @@ function hidePriceDetails(e, context) {
 
 function loadCharts(symbol) {
     console.log("[loadCharts] loading:", symbol)
-    const elm = document.getElementsByClassName("chart-container").item(0);
+    const elm = document.getElementsByClassName("chart-outer-container").item(0);
     elm.innerHTML = "Loading..."
     utils.getPriceData(symbol)
         .then(data => {

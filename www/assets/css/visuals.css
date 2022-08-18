@@ -21,7 +21,7 @@
 	border: solid 1px #ccc;
 }
 
-.chart-container {
+.chart-outer-container {
 	display: flex;
 	flex-direction: column;
 	/* align-items: baseline; */
@@ -29,24 +29,24 @@
 	justify-content: flex-start;
 	padding: 10px 0;
 }
-.chart-container .line {
+.chart-outer-container .line {
 	stroke: rgba(255, 0, 110, 0.5);
 	fill: none;
 }
-.chart-container .ellipse {
+.chart-outer-container .ellipse {
 	stroke: rgba(255, 0, 110, 0.5);
 	fill: rgba(255, 0, 110, 0.25);
 }
-.chart-container .bar {
+.chart-outer-container .bar {
 	stroke: rgba(255, 0, 110, 0.5);
 	fill: rgba(255, 0, 110, 0.25);
 }
 
-.chart-container .data-point {
+.chart-outer-container .data-point {
 	stroke: none;
 	fill: rgba(255, 0, 110, 0.15);
 }
-.chart-container .none {
+.chart-outer-container .none {
 	stroke: none;
 	fill: none;
 }

@@ -49,4 +49,4 @@ function onClickSymbol(e$, name) {
     stock.loadCharts(name)
 }
 
-stock.loadCharts("is")
+stock.loadCharts("AAPL")
