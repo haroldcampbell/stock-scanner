@@ -63,9 +63,13 @@ class MyServer(SimpleHTTPRequestHandler):
         print("in post method data_string:", self.data_string, self.path)
 
         num_records = 0
-        if self.path.lower() == "/refresh-data":
+        if self.path.lower() == "/refresh-all-data":
             print("refreshing all data")
             num_records = self.do_reload_watch_list_data()
+
+        elif self.path.lower() == "/refresh-week-data":
+            print("refreshing week data")
+            num_records = self.do_reload_week_data()
 
         elif self.path.lower() == "/update-analysis":
             print("refreshing analaysis")
@@ -86,6 +90,18 @@ class MyServer(SimpleHTTPRequestHandler):
         for item in self.watchlist_data:
             num_records += market.save_market_data_db(
                 self.stock_col, item['symbol'], 180)
+
+            analysis.generate_analysis_db(self.stock_col,
+                                          self.analysis_col,
+                                          item['symbol'],
+                                          19)
+        return num_records
+
+    def do_reload_week_data(self):
+        num_records = 0
+        for item in self.watchlist_data:
+            num_records += market.save_market_data_db(
+                self.stock_col, item['symbol'], 7)
 
             analysis.generate_analysis_db(self.stock_col,
                                           self.analysis_col,

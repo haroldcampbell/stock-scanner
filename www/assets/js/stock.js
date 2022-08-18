@@ -1,12 +1,13 @@
 import utils from "./utils.js"
 
+const chartWidth = 325;
 const chartHeight = 250;
-const chartWidth = 350;
+
 const xMargin = 45;
 const yMargin = chartHeight + 50;
 
-const chartXLegend = chartWidth + xMargin + 25
-const chartYLegend = 100
+const chartYLegend = 100;
+const chartXLegend = chartWidth + xMargin + 25;
 
 function xAxis(xIncrement, itemCount, weekData) {
     return gtap.$hLine([
@@ -40,9 +41,9 @@ function yAxis(yTickCount, yTickSpace, yIndexer, axisName) {
             tick.label.$style(`stroke: none; fill:#767A8F; font-size:0.6em;`);
             tick.label.$textAnchor('end');
             tick.alignWithAngle(270);
-            console.log(tick)
+
             if (tick.tickIndex == (yTickCount - 1)) {
-                tick.label.$text(`${axisName}${tick.label.$text()}`)
+                tick.label.$text(`${axisName}${tick.label.$text()}`);
             }
         }, { xMargin: -5, yMargin: chartHeight + 4 })
     ])
@@ -57,11 +58,8 @@ function horizontalGridLines(yTickCount, yTickSpace) {
         gtap.$yMargin(yMargin),
         gtap.$height(1),
         gtap.$lambda((v, index) => {
-            if (index % 2 == 0) {
-                v.$style("fill: #f0f0f0; stroke:1;")
-            } else {
-                v.$style("fill: #f7f7f7; stroke:1;")
-            }
+            const fillColor = (index % 2 == 0) ? "#f0f0f0" : "#f7f7f7";
+            v.$style(`fill: ${fillColor}; stroke:1;`);
         })
     ])
 }
@@ -79,9 +77,9 @@ function chartLegend(textArray, colors) {
             e.$style(`stroke: none; fill:#767A8F; font-size:0.7em; font-weight: 600;`);
 
             const e2 = gtap.ellipse(v.$parentElm);
+            e2.$size(2, 2);
             e2.$x(v.$x() - 5);
             e2.$y(v.$y() - 4);
-            e2.$size(2, 2);
             e2.$style(`stroke: none; fill:${colors[index]};`);
         })
     ])
@@ -95,18 +93,18 @@ function renderChangeData(priceData) {
     let maxHighMinLowData = gtap.$data(priceData.map(s => s.MaxHigh_MinLow));
     let meanHighMeanLowData = gtap.$data(priceData.map(s => s.MeanHigh_MeanLow));
 
-    let maxData = maxHighMinLowData.max()
+    let maxData = maxHighMinLowData.max();
 
-    maxData = maxData > 1 ? maxData : 1
-    maxHighMinLowData.forcedMax(maxData)
-    meanHighMeanLowData.forcedMax(maxData)
+    maxData = maxData > 1 ? maxData : 1;
+    maxHighMinLowData.forcedMax(maxData);
+    meanHighMeanLowData.forcedMax(maxData);
 
     const xIncrement = chartWidth / maxHighMinLowData.itemCount();
     const max_high = Math.ceil(maxHighMinLowData.max());
     const itemCount = maxHighMinLowData.itemCount();
 
-    const yTickCount = 10
-    const yTickSpace = chartHeight / yTickCount
+    const yTickCount = 10;
+    const yTickSpace = chartHeight / yTickCount;
     const yIndexer = (index) => { return 100 * (index + 1) * yTickSpace * max_high / chartHeight };
 
     let ctx = gtap.container("change-1", gtap.$id("change-chart"));
@@ -143,12 +141,12 @@ function renderChangeData(priceData) {
                 gtap.$lambda((v, index) => {
                     const val = parseInt(meanHighMeanLowData.rawItemAtIndex(index) * 1000) / 10
                     const node = gtap.text(v.$parentElm)
+                    node.$text(val);
                     node.$x(v.$x());
                     node.$y(v.$y());
                     node.$textAnchor("middle");
                     node.$vAlign("middle");
-                    node.$style("fill:#777; font-size:0.6em;")
-                    node.$text(val);
+                    node.$style("fill:#777; font-size:0.6em;");
                 })
             ]
         }).withPostActions([
@@ -158,52 +156,76 @@ function renderChangeData(priceData) {
     ]);
 }
 
+function zeroedList(initialList, minValue) {
+    let currentMinValue = minValue
+    if (currentMinValue === undefined) {
+        currentMinValue = Math.min(...initialList, [Number.POSITIVE_INFINITY]);
+    }
+    const list = initialList.map(i => i - currentMinValue);
+
+    return [gtap.$data(list), currentMinValue];
+}
 function renderPriceData(priceData) {
-    const textArray = ["Max_High", "Mean_High", "Mean_Intra_Day", "Mean_Low", "Min_Low"];
-    const colors = ["#ED9FA2", "Purple", "Red", "Orange", "Green"];
+    const textArray = ["Max_High", "Mean_High", "Mean_Intra_Day", "Mean_Low", "Min_Low", "Week"];
+    const colors = ["#ED9FA2", "transparent", "transparent", "transparent", "Green", "transparent"];
 
-    let list, minValue;
-
-    list = priceData.map(s => s.Min_Low)
-    minValue = Math.min(...list, [Number.POSITIVE_INFINITY])
-    list = list.map(i => i - minValue)
-    // console.log("minValue:", minValue, "zeroed Min_Low: ", list);
-    let minLowData = gtap.$data(list);
-
-    list = priceData.map(s => s.Max_High)
-    // minValue = Math.min(...list, [Number.POSITIVE_INFINITY])
-    list = list.map(i => i - minValue)
-    // console.log("minValue:", minValue, "zeroed Max_High: ", list);
-    let maxHighData = gtap.$data(list);
-
+    let [minLowData, minValue] = zeroedList(priceData.map(s => s.Min_Low))
+    let [maxHighData] = zeroedList(priceData.map(s => s.Max_High), minValue)
 
     let weekData = priceData.map(s => s.Week);
-    // let maxHighData = gtap.$data(priceData.map(s => s.Max_High));
-    // let meanHighData = gtap.$data(priceData.map(s => s.Mean_High));
-    // let meanIntraDayData = gtap.$data(priceData.map(s => s.Mean_Intra_Day));
-    // let meanLowData = gtap.$data(priceData.map(s => s.Mean_Low));
-    // let minLowData = gtap.$data(priceData.map(s => s.Min_Low));
 
-    // meanHighData.forcedMax(maxHighData.max())
-    // meanIntraDayData.forcedMax(maxHighData.max())
-    // meanLowData.forcedMax(maxHighData.max())
-    minLowData.forcedMax(maxHighData.max())
+    minLowData.forcedMax(maxHighData.max());
 
     const xIncrement = chartWidth / maxHighData.itemCount();
-    // const max_high = Math.ceil(maxHighData.max());
     const maxHigh = maxHighData.max();
-    // const minLow = minLowData.min();
     const itemCount = maxHighData.itemCount();
 
-    const yTickCount = 10
-    const yTickSpace = chartHeight * 1 / yTickCount
+    const yTickCount = 10;
+    const yTickSpace = chartHeight / yTickCount;
 
     const yIndexer = (index) => {
-        const val = minValue + (maxHigh) / yTickCount * (index + 1);
-        return (val * 1.0).toFixed(2);
+        const val = minValue + maxHigh / (yTickCount - 2) * (index + 0);
+        return (val).toFixed(2);
     };
 
-    console.log("maxHigh + minValue:", maxHigh + minValue)
+    const pricLegendElements = {};
+
+    const setLegend = (name, value, decimal = 2) => {
+        let item = pricLegendElements[name];
+        if (value != null || value != undefined) {
+            item.node.$text(`${item.title}: ${value.toFixed(decimal)}`);
+        } else {
+            item.node.$text(item.title);
+        }
+    };
+
+    const onShowPriceDetails = (e, context) => {
+        gtap.$stopMouseDefaults(e);
+
+        const dataPoint = context.priceData[context.dataIndex];
+
+        setLegend("Max_High", dataPoint.Max_High);
+        setLegend("Mean_High", dataPoint.Mean_High);
+        setLegend("Mean_Intra_Day", dataPoint.Mean_Intra_Day);
+        setLegend("Mean_Low", dataPoint.Mean_Low);
+        setLegend("Min_Low", dataPoint.Min_Low);
+        setLegend("Week", dataPoint.Week, 0);
+
+        context.v.$style(`stroke: none; fill:#f0f0f0;`);
+    }
+
+    const onHidePriceDetails = (e, context) => {
+        gtap.$stopMouseDefaults(e);
+
+        setLegend("Max_High");
+        setLegend("Mean_High");
+        setLegend("Mean_Intra_Day");
+        setLegend("Mean_Low");
+        setLegend("Min_Low");
+        setLegend("Week");
+
+        context.v.$style(`stroke: none; fill:#767A8F00;`);
+    }
 
     let ctx = gtap.container("line-1", gtap.$id("line-chart"));
     gtap.renderVisuals(ctx, [
@@ -229,125 +251,42 @@ function renderPriceData(priceData) {
                     priceData,
                 };
 
-                v.onmouseover = (e) => showPriceDetails(e, sharedContext);
-                v.onmouseleave = (e) => hidePriceDetails(e, sharedContext);
+                v.onmouseover = (e) => onShowPriceDetails(e, sharedContext);
+                v.onmouseleave = (e) => onHidePriceDetails(e, sharedContext);
             }),
         ]),
 
-
         // Max_High
-        // gtap.$lines(maxHighData, [
-        //     gtap.$x(xIncrement),
-        //     gtap.$xMargin(xMargin),
-        //     gtap.$xIncrement(xIncrement),
-        //     gtap.$maxY(-chartHeight),
-        //     gtap.$yMargin(yMargin),
-        // ], {
-        //     isConnected: true,
-        // }).withPostActions([
-        //     gtap.$style(`stroke-linecap:round;stroke:${colors[textArray.indexOf("Max_High")]};stroke-width:2`),
-        // ]),
-
-        // Max_High 2
         gtap.$polygon(maxHighData, [
             gtap.$x(xIncrement),
             gtap.$xMargin(xMargin),
             gtap.$xIncrement(xIncrement),
             gtap.$lambda((v, index, d) => {
-                const yOffset = 0//chartHeight * .15
-                v.$y((1 - v.getDataValue()) * chartHeight * 1 + 50 + yOffset / 2.0)
+                const yOffset = chartHeight * .2
+                v.$y((1 - v.getDataValue()) * chartHeight * .8 + 50 + yOffset / 2.0);
             }),
         ], {
-            isConnected: true,
             curveLength: 3,
 
         }).withPostActions([
             gtap.$style(`stroke-linecap:round;fill:none;stroke:${colors[textArray.indexOf("Max_High")]};stroke-width:1`),
         ]),
 
-        // Min_Low - 2
+        // Min_Low
         gtap.$polygon(minLowData, [
             gtap.$x(xIncrement),
             gtap.$xMargin(xMargin),
             gtap.$xIncrement(xIncrement),
             gtap.$lambda((v, index, d) => {
-                const yOffset = 0//chartHeight * .15
-                v.$y((1 - v.getDataValue()) * chartHeight * 1 + 50 + yOffset / 2.0)
+                const yOffset = chartHeight * .2
+                v.$y((1 - v.getDataValue()) * chartHeight * .8 + 50 + yOffset / 2.0);
             })
         ], {
-            isConnected: true,
             curveLength: 3,
 
         }).withPostActions([
             gtap.$style(`stroke-linecap:round;fill:none;stroke:${colors[textArray.indexOf("Min_Low")]};stroke-width:1`),
-            // gtap.$style(`stroke-linecap:round;stroke:${colors[textArray.indexOf("Min_Low")]};stroke-width:2`),
         ]),
-
-        // // Mean_High
-        // gtap.$lines(meanHighData, [
-        //     gtap.$x(xIncrement),
-        //     gtap.$xMargin(xMargin),
-        //     gtap.$xIncrement(xIncrement),
-        //     gtap.$maxY(-chartHeight),
-        //     gtap.$yMargin(yMargin),
-        // ], {
-        //     isConnected: true,
-        // }).withPostActions([
-        //     gtap.$style(`stroke-linecap:round;stroke:${colors[textArray.indexOf("Mean_High")]};stroke-width:2`),
-        // ]),
-
-        // // Mean_Intra_Day
-        // gtap.$lines(meanIntraDayData, [
-        //     gtap.$x(xIncrement),
-        //     gtap.$xMargin(xMargin),
-        //     gtap.$xIncrement(xIncrement),
-        //     gtap.$maxY(-chartHeight),
-        //     gtap.$yMargin(yMargin),
-        // ], {
-        //     isConnected: true,
-        // }).withPostActions([
-        //     gtap.$style(`stroke-linecap:round;stroke:${colors[textArray.indexOf("Mean_Intra_Day")]};stroke-width:2`),
-        // ]),
-
-        // // Mean_Low
-        // gtap.$lines(meanLowData, [
-        //     gtap.$x(xIncrement),
-        //     gtap.$xMargin(xMargin),
-        //     gtap.$xIncrement(xIncrement),
-        //     gtap.$maxY(-chartHeight),
-        //     gtap.$yMargin(yMargin),
-        // ], {
-        //     isConnected: true,
-        // }).withPostActions([
-        //     gtap.$style(`stroke-linecap:round;stroke:${colors[textArray.indexOf("Mean_Low")]};stroke-width:2`),
-        // ]),
-
-        // Min_Low
-        // gtap.$lines(minLowData, [
-        //     gtap.$x(xIncrement),
-        //     gtap.$xMargin(xMargin),
-        //     gtap.$xIncrement(xIncrement),
-        //     gtap.$maxY(-chartHeight),
-        //     gtap.$yMargin(yMargin),
-        // ], {
-        //     isConnected: true,
-        //     // pointActions: [
-        //     //     gtap.$lambda((v, index) => {
-        //     //         // const val = parseInt(minLowData.rawItemAtIndex(index))
-        //     //         const val = minLowData.rawItemAtIndex(index)
-        //     //         const node = gtap.text(v.$parentElm)
-        //     //         node.$x(v.$x());
-        //     //         node.$y(v.$y());
-        //     //         node.$textAnchor("middle");
-        //     //         node.$vAlign("middle");
-        //     //         node.$style("fill:#777; font-size:0.6em;")
-        //     //         node.$text(val);
-        //     //     })
-        //     // ]
-        // }).withPostActions([
-        //     gtap.$style(`stroke-linecap:round;stroke:${'red'};stroke-width:2`),
-        //     // gtap.$style(`stroke-linecap:round;stroke:${colors[textArray.indexOf("Min_Low")]};stroke-width:2`),
-        // ]),
 
         // Legend
         gtap.$wrappedShape(gtap.pointNode, gtap.$dataWithIncrement(textArray.length, 1), [
@@ -370,47 +309,15 @@ function renderPriceData(priceData) {
                 pricLegendElements[textArray[index]] = {
                     node: e,
                     title: textArray[index],
-                }
+                };;
             })
         ]),
     ]);
-}
 
-const pricLegendElements = {}
 
-function setLegend(name, value) {
-    let item = pricLegendElements[name];
-    if (value != null || value != undefined) {
-        item.node.$text(`${item.title}: ${value.toFixed(2)}`);
-    } else {
-        item.node.$text(item.title);
-    }
-}
 
-function showPriceDetails(e, context) {
-    gtap.$stopMouseDefaults(e);
 
-    const dataPoint = context.priceData[context.dataIndex];
 
-    setLegend("Max_High", dataPoint.Max_High);
-    setLegend("Mean_High", dataPoint.Mean_High);
-    setLegend("Mean_Intra_Day", dataPoint.Mean_Intra_Day);
-    setLegend("Mean_Low", dataPoint.Mean_Low);
-    setLegend("Min_Low", dataPoint.Min_Low);
-
-    context.v.$style(`stroke: none; fill:#f0f0f0;`);
-}
-
-function hidePriceDetails(e, context) {
-    gtap.$stopMouseDefaults(e);
-
-    setLegend("Max_High");
-    // setLegend("Mean_High");
-    // setLegend("Mean_Intra_Day");
-    // setLegend("Mean_Low");
-    setLegend("Min_Low");
-
-    context.v.$style(`stroke: none; fill:#767A8F00;`);
 }
 
 function loadCharts(symbol) {

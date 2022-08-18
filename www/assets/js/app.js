@@ -1,10 +1,25 @@
 import utils from "./utils.js"
 import stock from "./stock.js"
 
-utils.getJSON('/data/watchlist.json')
-    .then(data => {
-        createWatchList(data)
-    })
+
+function onClickSymbol(e$, name) {
+    console.log("onClickSymbol e$:", e$, name)
+    stock.loadCharts(name)
+}
+
+function createButton(container, text, postURL, actionCallback) {
+    let child = document.createElement("button");
+    child.innerText = text;
+    child.onclick = (e) => {
+        utils.postJSON(postURL)
+            .then(data => {
+                if (actionCallback !== undefined) {
+                    actionCallback(data)
+                }
+            });
+    }
+    container.appendChild(child);
+}
 
 function createWatchList(symbolList) {
     const container = document.getElementsByClassName("watchlist-container").item(0);
@@ -17,26 +32,15 @@ function createWatchList(symbolList) {
         container.appendChild(child);
     }
 
-    let child = document.createElement("button");
-    child.innerText = "Refresh all"
-    child.onclick = (e) => {
-        utils.postJSON("/refresh-data")
-            .then(data => {
-                window.alert(`New Records: '${data.newRecords}'`)
-            })
-    }
-    container.appendChild(child);
-
-    child = document.createElement("button");
-    child.innerText = "Update analysis"
-    child.onclick = (e) => {
-        utils.postJSON("/update-analysis")
-            .then(data => {
-                window.alert(`New Records: '${data.newRecords}'`)
-            })
-    }
-    container.appendChild(child);
-
+    createButton(container, "Refresh all", "/refresh-all-data", data => {
+        window.alert(`New Records: '${data.newRecords}'`)
+    });
+    createButton(container, "Refresh week", "/refresh-week-data", data => {
+        window.alert(`New Records: '${data.newRecords}'`)
+    });
+    createButton(container, "Update analysis", "/update-analysis", data => {
+        window.alert(`New Records: '${data.newRecords}'`)
+    });
 
     createSymbol("--All");
     symbolList.forEach(symbol => {
@@ -44,9 +48,9 @@ function createWatchList(symbolList) {
     });
 }
 
-function onClickSymbol(e$, name) {
-    console.log("onClickSymbol e$:", e$, name)
-    stock.loadCharts(name)
-}
+utils.getJSON('/data/watchlist.json')
+    .then(data => {
+        createWatchList(data)
+    });
 
 stock.loadCharts("AAPL")

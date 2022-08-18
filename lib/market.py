@@ -55,7 +55,8 @@ def fetch_market_data(symbol: str, period_in_days: int):
 
 def save_market_data_db(stock_col: Collection, symbol: str, period_in_days: int):
     output_path = ("%s%s" % (STOCKS_DIR, symbol))
-    print("\tsaving output to: ", output_path)
+    # print("\tsaving output to: ", output_path)
+    print("\tGetting symbol data: ", symbol)
 
     data = {
         "Stock": [],
@@ -68,8 +69,6 @@ def save_market_data_db(stock_col: Collection, symbol: str, period_in_days: int)
         "Adj Close": [],
         "Volume": [],
     }
-
-    print("\t...getting symbol data: ", symbol)
 
     sym = _stock_short_name(symbol)
     s = Stock(sym).historical(period_in_days)
