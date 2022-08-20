@@ -100,7 +100,7 @@ class MyServer(SimpleHTTPRequestHandler):
     def do_reload_week_data(self):
         num_records = 0
         for item in self.watchlist_data:
-            num_records += market.save_market_data_db(
+            num_records += market.update_market_data_db(
                 self.stock_col, item['symbol'], 7)
 
             analysis.generate_analysis_db(self.stock_col,

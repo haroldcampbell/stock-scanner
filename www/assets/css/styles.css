@@ -14,6 +14,11 @@ body {
 	position: relative;
 	background: #f6f6f6;
 	/* padding: 20px; */
+	display: flex;
+	flex-direction: column;
+	width: 100%;
+	/* justify-content: center; */
+	align-items: center;
 }
 
 ul,
@@ -56,8 +61,35 @@ h3 {
 	overflow: hidden;
 	height: 100%;
 	column-gap: 20px;
+	width: 800px;
 }
 
+.nav-container {
+	height: 50px;
+	background-color: #333;
+	width: 100%;
+	display: flex;
+	flex-direction: row;
+	align-items: center;
+	justify-content: center;
+}
+.nav-container .nav-inner-container {
+	width: 800px;
+	color: #f0f0f0;
+}
+.nav-container .nav-inner-container .button-container {
+	display: flex;
+	flex-direction: row;
+	column-gap: 5px;
+	margin: 0;
+	padding: 0;
+}
+.nav-container .button-container li {
+	display: flex;
+}
+.nav-container .button-container button {
+	font-size: 12px;
+}
 .watchlist-scroll-container {
 	position: relative;
 	width: 150px;

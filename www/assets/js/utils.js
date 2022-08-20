@@ -56,9 +56,43 @@ const getChangeData = (symbol) => {
     return getJSON(`/data/analysis/${symbol}-change.json`);
 }
 
+function wireButtonByID(buttonID, postURL, actionCallback) {
+    const btn = document.getElementById(buttonID);
+
+    if (btn === null) {
+        console.warn("[wireButtonByID] Button not found: ", buttonID, postURL);
+        return;
+    }
+    btn.onclick = (e) => {
+        // console.log("[wireButtonByID] buttonID", buttonID)
+        postJSON(postURL)
+            .then(data => {
+                if (actionCallback !== undefined) {
+                    actionCallback(data)
+                }
+            });
+    }
+}
+
+function createButton(container, text, postURL, actionCallback) {
+    let child = document.createElement("button");
+    child.innerText = text;
+    child.onclick = (e) => {
+        postJSON(postURL)
+            .then(data => {
+                if (actionCallback !== undefined) {
+                    actionCallback(data)
+                }
+            });
+    }
+    container.appendChild(child);
+}
+
 export default {
     getJSON,
     postJSON,
     getPriceData,
     getChangeData,
+    wireButtonByID,
+    createButton,
 }

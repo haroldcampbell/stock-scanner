@@ -8,7 +8,21 @@
 	</head>
 
 	<body>
+		<div class="nav-container">
+			<div class="nav-inner-container">
+				<ul class="button-container">
+					<li><button id="btn-refresh-all">Refresh all</button></li>
+					<li><button id="btn-refresh-week">Refresh week</button></li>
+					<li>
+						<button id="btn-update-analysis">
+							Update analysis
+						</button>
+					</li>
+				</ul>
+			</div>
+		</div>
 		<div class="page-container">
+			<!-- <div> -->
 			<div class="watchlist-scroll-container">
 				<div class="watchlist-container"></div>
 			</div>
@@ -16,6 +30,7 @@
 				<div id="line-chart" class="line-chart"></div>
 				<div id="change-chart" class="change-chart"></div>
 			</div>
+			<!-- </div> -->
 		</div>
 
 		<script src="./assets/js/utils.js" type="module"></script>

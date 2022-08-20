@@ -54,10 +54,51 @@ def fetch_market_data(symbol: str, period_in_days: int):
 
 
 def save_market_data_db(stock_col: Collection, symbol: str, period_in_days: int):
-    output_path = ("%s%s" % (STOCKS_DIR, symbol))
-    # print("\tsaving output to: ", output_path)
     print("\tGetting symbol data: ", symbol)
 
+    records = _get_stock_data(symbol, period_in_days)
+    new_records = []
+
+    for item in records:
+        filter = {"Stock": item["Stock"], "Date": item["Date"]}
+        num = stock_col.count_documents(filter)
+        if num == 1:
+            continue
+        else:
+            new_records.append(item)
+
+    num_records = _save_records_to_db(stock_col, new_records)
+
+    return num_records
+
+
+def update_market_data_db(stock_col: Collection, symbol: str, period_in_days: int):
+    print("\tGetting symbol data: ", symbol)
+
+    new_records = []
+    records = _get_stock_data(symbol, period_in_days)
+    num_records = 0
+    for item in records:
+        filter = {"Stock": item["Stock"], "Date": item["Date"]}
+        stock_col.update_one(filter, {"$set": item}, upsert=True)
+        num_records += 1
+
+    return num_records
+
+
+def _save_records_to_db(stock_col: Collection, new_records):
+    num_records = len(new_records)
+
+    if num_records > 0:
+        result = stock_col.insert_many(new_records)
+        print("\t...records saved:", len(result.inserted_ids))
+    else:
+        print("\t...no new records saved")
+
+    return num_records
+
+
+def _get_stock_data(symbol, period_in_days):
     data = {
         "Stock": [],
         "Date": [],
@@ -92,25 +133,8 @@ def save_market_data_db(stock_col: Collection, symbol: str, period_in_days: int)
     data["Week"] += wk_arr
 
     df = pd.DataFrame(data)
-    records = df.to_dict('records')
 
-    new_records = []
-    for item in records:
-        filter = {"Stock": item["Stock"], "Date": item["Date"]}
-        num = stock_col.count_documents(filter)
-        if num == 1:
-            continue
-        else:
-            new_records.append(item)
-
-    num_records = len(new_records)
-    if num_records > 0:
-        result = stock_col.insert_many(new_records)
-        print("\t...records saved:", len(result.inserted_ids))
-    else:
-        print("\t...no new records saved")
-
-    return num_records
+    return df.to_dict('records')
 
 
 def _stock_short_name(symbol: str) -> str:

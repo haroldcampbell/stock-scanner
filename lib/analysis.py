@@ -56,9 +56,7 @@ def fetch_symbol_db(analysis_col: Collection, symbol: str):
 
 def _save_analysis_db(analysis_col: Collection, data_dict: dict, symbol):
     analysis_col.delete_many({"Stock": symbol})
-
     analysis_col.insert_one(data_dict)
-    # num = analysis_col.count_documents(filter)
 
     print("\t...save analysis records for:", symbol)
 

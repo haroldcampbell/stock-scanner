@@ -7,20 +7,6 @@ function onClickSymbol(e$, name) {
     stock.loadCharts(name)
 }
 
-function createButton(container, text, postURL, actionCallback) {
-    let child = document.createElement("button");
-    child.innerText = text;
-    child.onclick = (e) => {
-        utils.postJSON(postURL)
-            .then(data => {
-                if (actionCallback !== undefined) {
-                    actionCallback(data)
-                }
-            });
-    }
-    container.appendChild(child);
-}
-
 function createWatchList(symbolList) {
     const container = document.getElementsByClassName("watchlist-container").item(0);
 
@@ -32,13 +18,13 @@ function createWatchList(symbolList) {
         container.appendChild(child);
     }
 
-    createButton(container, "Refresh all", "/refresh-all-data", data => {
+    utils.wireButtonByID("btn-refresh-all", "/refresh-all-data", data => {
         window.alert(`New Records: '${data.newRecords}'`)
     });
-    createButton(container, "Refresh week", "/refresh-week-data", data => {
+    utils.wireButtonByID("btn-refresh-week", "/refresh-week-data", data => {
         window.alert(`New Records: '${data.newRecords}'`)
     });
-    createButton(container, "Update analysis", "/update-analysis", data => {
+    utils.wireButtonByID("btn-update-analysis", "/update-analysis", data => {
         window.alert(`New Records: '${data.newRecords}'`)
     });
 
