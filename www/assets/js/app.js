@@ -3,7 +3,7 @@ import stock from "./stock.js"
 
 
 function onClickSymbol(e$, name) {
-    console.log("onClickSymbol e$:", e$, name)
+    // console.log("onClickSymbol e$:", e$, name)
     stock.loadCharts(name)
 }
 

@@ -14,8 +14,8 @@ const sharedContext = {
         price: {},
         change: {},
     },
-    priceCtx: [],
-    changeCtx: []
+    priceCtx: {},
+    changeCtx: {},
 };
 
 function xAxis(xIncrement, itemCount, weekData) {
@@ -94,6 +94,108 @@ function chartLegend(textArray, colors) {
     ])
 }
 
+
+function zeroedList(initialList, minValue) {
+    let currentMinValue = minValue
+    if (currentMinValue === undefined) {
+        currentMinValue = Math.min(...initialList, [Number.POSITIVE_INFINITY]);
+    }
+    const list = initialList.map(i => i - currentMinValue);
+
+    return [gtap.$data(list), currentMinValue];
+}
+
+function formatDate(pyDate) {
+    const jsDate = new Date(Date.parse(pyDate))
+    return `${jsDate.getDate()}/${jsDate.getUTCMonth() + 1}`
+}
+
+function setLegend(name, value, decimal = 2) {
+    let item = sharedContext
+        .legendElements
+        .price[name];
+
+    if (value != null || value != undefined) {
+        item.valueNode.$text(`${value.toFixed(decimal)}`);
+    } else {
+        item.valueNode.$text("");
+    }
+};
+
+function onShowChartDetails(e, dataIndex, context) {
+    gtap.$stopMouseDefaults(e);
+
+    const priceCtx = context.priceCtx[dataIndex];
+    const changeCtx = context.changeCtx[dataIndex];
+    const dataPoint = priceCtx.priceData[dataIndex];
+
+    // Show price
+    setLegend("Max_High", dataPoint.Max_High);
+    setLegend("Mean_High", dataPoint.Mean_High);
+    setLegend("Mean_Intra_Day", dataPoint.Mean_Intra_Day);
+    setLegend("Mean_Low", dataPoint.Mean_Low);
+    setLegend("Min_Low", dataPoint.Min_Low);
+    setLegend("Week", dataPoint.Week, 0);
+
+    // console.log("dataPoint:", dataPoint)
+    const start = formatDate(dataPoint.Week_Start.$date);
+    const end = formatDate(dataPoint.Week_End.$date);
+    const labelText = `${start} - ${end}`;
+
+    Object.entries(context.priceCtx).forEach((index, _) => {
+        index = parseInt(index)
+
+        const style = `stroke: none; fill:transparent; font-size:0.6em;`
+        context.priceCtx[index].labelNode.$style(style);
+        context.changeCtx[index].labelNode.$style(style);
+    });
+
+    priceCtx.labelNode.$text(labelText);
+    priceCtx.labelNode.$style(`stroke: none; fill:#767A8F; font-size:0.6em;`);
+    priceCtx.lineNode.$style(`stroke: #777; fill:none;stroke-width:0.5`);
+    priceCtx.visualBGNode.$style(`stroke: none; fill:#f0f0f0;`);
+
+    changeCtx.labelNode.$text(labelText);
+    changeCtx.labelNode.$style(`stroke: none; fill:#767A8F; font-size:0.6em;`);
+    changeCtx.lineNode.$style(`stroke: #777; fill:none;stroke-width:0.5`);
+    changeCtx.visualBGNode.$style(`stroke: none; fill:#f0f0f0;`);
+}
+
+function onHideChartDetails(e, dataIndex, context) {
+    gtap.$stopMouseDefaults(e);
+
+    // Hide price details
+    setLegend("Max_High");
+    setLegend("Mean_High");
+    setLegend("Mean_Intra_Day");
+    setLegend("Mean_Low");
+    setLegend("Min_Low");
+    setLegend("Week");
+
+    const priceCtx = context.priceCtx[dataIndex];
+    const changeCtx = context.changeCtx[dataIndex];
+    const dataPoint = priceCtx.priceData[dataIndex];
+    const labelText = dataPoint.Week;
+
+    Object.entries(context.priceCtx).forEach(index => {
+        index = parseInt(index);
+
+        const fillstyle = (index % 2) ? 'transparent' : '#767A8F';
+        const style = `stroke: none; fill:${fillstyle}; font-size:0.6em;`;
+
+        context.priceCtx[index].labelNode.$style(style);
+        context.changeCtx[index].labelNode.$style(style);
+    });
+
+    priceCtx.labelNode.$text(labelText);
+    priceCtx.lineNode.$style(`stroke: transparent; fill:none;stroke-width:0.5`);
+    priceCtx.visualBGNode.$style(`stroke: none; fill:#767A8F00;`);
+
+    changeCtx.labelNode.$text(labelText);
+    changeCtx.lineNode.$style(`stroke: transparent; fill:none;stroke-width:0.5`);
+    changeCtx.visualBGNode.$style(`stroke: none; fill:#767A8F00;`);
+}
+
 function renderChangeData(priceData) {
     const colors = ["#7EADB9", "#FFD797"];
     const textArray = ["MaxHigh_MinLow", "MeanHigh_MeanLow"];
@@ -148,13 +250,13 @@ function renderChangeData(priceData) {
                 label.$style(`stroke: none; fill:red; font-size:0.6em;`);
                 label.$style(`stroke: none; fill:${fillstyle}; font-size:0.6em;`);
 
-                sharedContext.changeCtx.push({
+                sharedContext.changeCtx[index] = {
                     context: ctx,
                     priceData,
                     labelNode: label,
                     visualBGNode: v,
                     lineNode: node,
-                });
+                };
 
                 v.onmouseover = (e) => onShowChartDetails(e, index, sharedContext);
                 v.onmouseleave = (e) => onHideChartDetails(e, index, sharedContext);
@@ -198,105 +300,7 @@ function renderChangeData(priceData) {
         }).withPostActions([
             gtap.$style(`stroke:${colors[textArray.indexOf("MeanHigh_MeanLow")]};stroke-width:2`),
         ]),
-
     ]);
-}
-
-function zeroedList(initialList, minValue) {
-    let currentMinValue = minValue
-    if (currentMinValue === undefined) {
-        currentMinValue = Math.min(...initialList, [Number.POSITIVE_INFINITY]);
-    }
-    const list = initialList.map(i => i - currentMinValue);
-
-    return [gtap.$data(list), currentMinValue];
-}
-
-function formatDate(pyDate) {
-    const jsDate = new Date(Date.parse(pyDate))
-    return `${jsDate.getDate()}/${jsDate.getUTCMonth() + 1}`
-}
-
-function setLegend(name, value, decimal = 2) {
-    let item = sharedContext
-        .legendElements
-        .price[name];
-
-    if (value != null || value != undefined) {
-        item.valueNode.$text(`${value.toFixed(decimal)}`);
-    } else {
-        item.valueNode.$text("");
-    }
-};
-
-function onShowChartDetails(e, dataIndex, context) {
-    gtap.$stopMouseDefaults(e);
-
-    const priceCtx = context.priceCtx[dataIndex];
-    const changeCtx = context.changeCtx[dataIndex];
-    const dataPoint = priceCtx.priceData[dataIndex];
-
-    // Show price
-    setLegend("Max_High", dataPoint.Max_High);
-    setLegend("Mean_High", dataPoint.Mean_High);
-    setLegend("Mean_Intra_Day", dataPoint.Mean_Intra_Day);
-    setLegend("Mean_Low", dataPoint.Mean_Low);
-    setLegend("Min_Low", dataPoint.Min_Low);
-    setLegend("Week", dataPoint.Week, 0);
-
-    const start = formatDate(dataPoint.Week_Start.$date);
-    const end = formatDate(dataPoint.Week_End.$date);
-    const labelText = `${start} - ${end}`;
-
-    context.priceCtx.forEach((_, index) => {
-        const style = `stroke: none; fill:transparent; font-size:0.6em;`
-        // priceCtx.labelNode.$style(style);
-        context.priceCtx[index].labelNode.$style(style);
-        context.changeCtx[index].labelNode.$style(style);
-    });
-
-    priceCtx.labelNode.$text(labelText);
-    priceCtx.labelNode.$style(`stroke: none; fill:#767A8F; font-size:0.6em;`);
-    priceCtx.lineNode.$style(`stroke: #777; fill:none;stroke-width:0.5`);
-    priceCtx.visualBGNode.$style(`stroke: none; fill:#f0f0f0;`);
-
-    changeCtx.labelNode.$text(labelText);
-    changeCtx.labelNode.$style(`stroke: none; fill:#767A8F; font-size:0.6em;`);
-    changeCtx.lineNode.$style(`stroke: #777; fill:none;stroke-width:0.5`);
-    changeCtx.visualBGNode.$style(`stroke: none; fill:#f0f0f0;`);
-}
-
-function onHideChartDetails(e, dataIndex, context) {
-    gtap.$stopMouseDefaults(e);
-
-    // Hide price details
-    setLegend("Max_High");
-    setLegend("Mean_High");
-    setLegend("Mean_Intra_Day");
-    setLegend("Mean_Low");
-    setLegend("Min_Low");
-    setLegend("Week");
-
-    const priceCtx = context.priceCtx[dataIndex];
-    const changeCtx = context.changeCtx[dataIndex];
-    const dataPoint = priceCtx.priceData[dataIndex];
-    const labelText = dataPoint.Week;
-
-    context.priceCtx.forEach((_, index) => {
-        const fillstyle = (index % 2) ? 'transparent' : '#767A8F';
-        const style = `stroke: none; fill:${fillstyle}; font-size:0.6em;`;
-
-        context.priceCtx[index].labelNode.$style(style);
-        context.changeCtx[index].labelNode.$style(style);
-    });
-
-    priceCtx.labelNode.$text(labelText);
-    priceCtx.lineNode.$style(`stroke: transparent; fill:none;stroke-width:0.5`);
-    priceCtx.visualBGNode.$style(`stroke: none; fill:#767A8F00;`);
-
-    changeCtx.labelNode.$text(labelText);
-    changeCtx.lineNode.$style(`stroke: transparent; fill:none;stroke-width:0.5`);
-    changeCtx.visualBGNode.$style(`stroke: none; fill:#767A8F00;`);
 }
 
 function renderPriceData(priceData) {
@@ -357,13 +361,13 @@ function renderPriceData(priceData) {
                 label.$style(`stroke: none; fill:red; font-size:0.6em;`);
                 label.$style(`stroke: none; fill:${fillstyle}; font-size:0.6em;`);
 
-                sharedContext.priceCtx.push({
+                sharedContext.priceCtx[index] = {
                     context: ctx,
                     priceData,
                     labelNode: label,
                     visualBGNode: v,
                     lineNode: node,
-                });
+                };
 
                 v.onmouseover = (e) => onShowChartDetails(e, index, sharedContext);
                 v.onmouseleave = (e) => onHideChartDetails(e, index, sharedContext);
@@ -419,7 +423,6 @@ function renderPriceData(priceData) {
                 nameNode.$y(v.$y());
                 nameNode.$text(textArray[index]);
                 nameNode.$style(`stroke: none; fill:#767A8F; font-size:0.7em; font-weight: 100;`);
-                console.log(textArray[index], nameNode.$textBoundingBox())
 
                 const box = nameNode.$textBoundingBox()
                 const valNode = gtap.text(v.$parentElm);
@@ -427,7 +430,6 @@ function renderPriceData(priceData) {
                 valNode.$y(v.$y());
                 // valNode.$text("xxx");
                 valNode.$style(`stroke: none; fill:#767A8F; font-size:0.7em; font-weight: 600;`);
-
 
                 // console.log(textArray[index])
                 sharedContext
@@ -443,7 +445,7 @@ function renderPriceData(priceData) {
 }
 
 function loadCharts(symbol) {
-    console.log("[loadCharts] loading:", symbol)
+    // console.log("[loadCharts] loading:", symbol)
     const elm = document.getElementsByClassName("chart-outer-container").item(0);
     elm.innerHTML = "Loading..."
     utils.getPriceData(symbol)
