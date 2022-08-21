@@ -75,7 +75,6 @@ def save_market_data_db(stock_col: Collection, symbol: str, period_in_days: int)
 def update_market_data_db(stock_col: Collection, symbol: str, period_in_days: int):
     print("\tGetting symbol data: ", symbol)
 
-    new_records = []
     records = _get_stock_data(symbol, period_in_days)
     num_records = 0
     for item in records:
@@ -103,6 +102,7 @@ def _get_stock_data(symbol, period_in_days):
         "Stock": [],
         "Date": [],
         "Week": [],
+        "Month": [],
         "Open": [],
         "High": [],
         "Low": [],
@@ -126,11 +126,15 @@ def _get_stock_data(symbol, period_in_days):
     data["Stock"] += sym_arr
 
     wk_arr = []
+    month_arr = []
     for d in s["Date"]:
         week = pd.to_datetime(d, errors='coerce').week
+        month_name = pd.to_datetime(d, errors='coerce').month_name()
         wk_arr.append(week)
+        month_arr.append(month_name)
 
     data["Week"] += wk_arr
+    data["Month"] += month_arr
 
     df = pd.DataFrame(data)
 

@@ -1,4 +1,3 @@
-
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
@@ -156,6 +155,9 @@ def _generate_analysis(stock_df, week_filter, symbol: str):
         "Stock": [],
 
         "Week": [],
+        "Week_Start": [],
+        "Week_End": [],
+
         "Mean_Open": [],
         "Mean_Close": [],
         "Mean_High": [],
@@ -186,6 +188,8 @@ def _generate_analysis(stock_df, week_filter, symbol: str):
         analysis_data["Stock"].append(symbol)
         analysis_data["Week"].append(wk)
         wk_group = week_group.get_group(wk)
+
+        _calc_date_range(analysis_data, wk_group)
         _calc_mean(analysis_data, wk_group)
         _calc_min(analysis_data, wk_group)
         _calc_max(analysis_data, wk_group)
@@ -195,6 +199,12 @@ def _generate_analysis(stock_df, week_filter, symbol: str):
     analysis_data_df = pd.DataFrame(analysis_data)
 
     return analysis_data_df
+
+
+def _calc_date_range(analysis_data, week_group):
+    dates = week_group["Date"].tolist()
+    analysis_data["Week_Start"].append(dates[0])
+    analysis_data["Week_End"].append(dates[-1])
 
 
 def _append_atr(dict_data):

@@ -165,9 +165,15 @@ function zeroedList(initialList, minValue) {
 
     return [gtap.$data(list), currentMinValue];
 }
+
+function formatDate(pyDate) {
+    const jsDate = new Date(Date.parse(pyDate))
+    return `${jsDate.getDate()}/${jsDate.getUTCMonth() + 1}`
+}
+
 function renderPriceData(priceData) {
-    const textArray = ["Max_High", "Mean_High", "Mean_Intra_Day", "Mean_Low", "Min_Low", "Week"];
-    const colors = ["#ED9FA2", "transparent", "transparent", "transparent", "Green", "transparent"];
+    const textArray = ["Max_High", "Min_Low", "Mean_High", "Mean_Intra_Day", "Mean_Low", "Week"];
+    const colors = ["#ED9FA2", "Green", "transparent", "transparent", "transparent", "transparent"];
 
     let [minLowData, minValue] = zeroedList(priceData.map(s => s.Min_Low))
     let [maxHighData] = zeroedList(priceData.map(s => s.Max_High), minValue)
@@ -199,6 +205,9 @@ function renderPriceData(priceData) {
         }
     };
 
+    // const d = new Date(Date.parse(priceData[23].Week_Start.$date))
+    // console.log("priceData:", priceData[23].Week_Start.$date, `${d.getDate()}/${d.getUTCMonth() + 1}`)
+
     const onShowPriceDetails = (e, context) => {
         gtap.$stopMouseDefaults(e);
 
@@ -210,6 +219,20 @@ function renderPriceData(priceData) {
         setLegend("Mean_Low", dataPoint.Mean_Low);
         setLegend("Min_Low", dataPoint.Min_Low);
         setLegend("Week", dataPoint.Week, 0);
+
+        context.node.$style(`stroke: #777; fill:none;stroke-width:0.5`);
+
+        const start = formatDate(dataPoint.Week_Start.$date);
+        const end = formatDate(dataPoint.Week_End.$date);
+        const labelText = `${start} - ${end}`;
+
+        priceLabelNodes.forEach(tick => {
+            tick.label.$style(`stroke: none; fill:transparent; font-size:0.6em;`);
+        });
+
+        const tick = priceLabelNodes[context.dataIndex];
+        tick.label.$text(labelText);
+        tick.label.$style(`stroke: none; fill:#767A8F; font-size:0.6em;`);
 
         context.v.$style(`stroke: none; fill:#f0f0f0;`);
     }
@@ -224,13 +247,48 @@ function renderPriceData(priceData) {
         setLegend("Min_Low");
         setLegend("Week");
 
+        context.node.$style(`stroke: transparent; fill:none;stroke-width:0.5`);
+
+        const dataPoint = context.priceData[context.dataIndex];
+        const labelText = dataPoint.Week;//formatDate(dataPoint.Week);
+
+        const tick = priceLabelNodes[context.dataIndex]
+        tick.label.$text(labelText);
+
+        priceLabelNodes.forEach(tick => {
+            const fillstyle = (tick.tickIndex % 2) ? 'transparent' : '#767A8F';
+            tick.label.$style(`stroke: none; fill:${fillstyle}; font-size:0.6em;`);
+        });
+
+        // tick.label.$style(`stroke: none; fill:transparent; font-size:0.6em;`);
         context.v.$style(`stroke: none; fill:#767A8F00;`);
     }
 
+    const xAxisLabeler = (index) => {
+        return weekData[index];
+    }
+    const priceLabelNodes = [];
+
     let ctx = gtap.container("line-1", gtap.$id("line-chart"));
     gtap.renderVisuals(ctx, [
-        xAxis(xIncrement, itemCount, weekData),
+        // xAxis(xIncrement, itemCount, weekData),
         xAxisName(),
+        gtap.$hLine([
+            gtap.$xMargin(xMargin),
+            gtap.$width(chartWidth),
+            gtap.$y(yMargin),
+            // gtap.$tickMarks(itemCount, xIncrement, gtap.ellipseTicks("fill: #EB395A;"),
+            //     { xMargin: 0 }),
+            gtap.$tickMarkText(itemCount, xIncrement, xAxisLabeler, tick => {
+                tick.alignWithAngle(0);
+                tick.label.$textAnchor('middle');
+
+                const fillstyle = (tick.tickIndex % 2) ? 'transparent' : '#767A8F';
+                tick.label.$style(`stroke: none; fill:${fillstyle}; font-size:0.6em;`);
+
+                priceLabelNodes.push(tick);
+            }, { xMargin: 0, yMargin: 15 })
+        ]),
         yAxis(yTickCount, yTickSpace, yIndexer, "$"),
         horizontalGridLines(yTickCount, yTickSpace),
 
@@ -244,11 +302,19 @@ function renderPriceData(priceData) {
             gtap.$alignBottom(yMargin - 0.5),
             gtap.$style(`stroke: none; fill:#767A8F00;`),
             gtap.$lambda((v, index) => {
+                const node = gtap.vLine(v.$parentElm);
+                node.$x(v.$x() + xIncrement * 0.5);
+                node.$y(v.$y());
+                node.$height(chartHeight)
+                // node.$style(`stroke: #777; fill:none;stroke-width:0.5`);
+
                 const sharedContext = {
                     v,
                     context: ctx,
                     dataIndex: index,
                     priceData,
+                    node: node,
+
                 };
 
                 v.onmouseover = (e) => onShowPriceDetails(e, sharedContext);
@@ -313,11 +379,6 @@ function renderPriceData(priceData) {
             })
         ]),
     ]);
-
-
-
-
-
 }
 
 function loadCharts(symbol) {
