@@ -9,18 +9,23 @@ const yMargin = chartHeight + 50;
 const chartYLegend = 100;
 const chartXLegend = chartWidth + xMargin + 25;
 
+const sharedContext = {
+    priceCtx: [],
+    changeCtx: []
+};
+
 function xAxis(xIncrement, itemCount, weekData) {
     return gtap.$hLine([
         gtap.$xMargin(xMargin),
         gtap.$width(chartWidth),
         gtap.$y(yMargin),
-        gtap.$tickMarks(itemCount, xIncrement, gtap.ellipseTicks("fill: #EB395A;"),
-            { xMargin: 0 }),
-        gtap.$tickMarkText(itemCount, xIncrement, index => `${weekData[index]}`, tick => {
-            tick.alignWithAngle(0);
-            tick.label.$style(`stroke: none; fill:#767A8F; font-size:0.6em;`);
-            tick.label.$textAnchor('middle');
-        }, { xMargin: 0, yMargin: 15 })
+        // gtap.$tickMarks(itemCount, xIncrement, gtap.ellipseTicks("fill: #EB395A;"),
+        //     { xMargin: 0 }),
+        // gtap.$tickMarkText(itemCount, xIncrement, index => `${weekData[index]}`, tick => {
+        //     tick.alignWithAngle(0);
+        //     tick.label.$style(`stroke: none; fill:#767A8F; font-size:0.6em;`);
+        //     tick.label.$textAnchor('middle');
+        // }, { xMargin: 0, yMargin: 15 })
     ])
 }
 
@@ -115,6 +120,43 @@ function renderChangeData(priceData) {
         horizontalGridLines(yTickCount, yTickSpace),
         chartLegend(textArray, colors),
 
+        // Background highlight
+        gtap.$bars(gtap.$dataWithIncrement(maxHighMinLowData.itemCount(), 1), [
+            gtap.$width(xIncrement),
+            gtap.$x((xIncrement) * .5),
+            gtap.$xMargin(xMargin),
+            gtap.$xIncrement(xIncrement),
+            gtap.$height(chartHeight),
+            gtap.$alignBottom(yMargin - 0.5),
+            gtap.$style(`stroke: none; fill:#767A8F00;`),
+            gtap.$lambda((v, index) => {
+                const node = gtap.vLine(v.$parentElm);
+                node.$x(v.$x() + xIncrement * 0.5);
+                node.$y(v.$y());
+                node.$height(chartHeight)
+
+                const fillstyle = (index % 2) ? 'transparent' : '#767A8F';
+                const label = gtap.text(v.$parentElm);
+                label.$x(v.$x() + xIncrement * 0.5);
+                label.$y(v.$y() + chartHeight + 15);
+                label.$text(weekData[index]);
+                label.$textAnchor('middle');
+                label.$style(`stroke: none; fill:red; font-size:0.6em;`);
+                label.$style(`stroke: none; fill:${fillstyle}; font-size:0.6em;`);
+
+                sharedContext.changeCtx.push({
+                    context: ctx,
+                    priceData,
+                    labelNode: label,
+                    visualBGNode: v,
+                    lineNode: node,
+                });
+
+                // v.onmouseover = (e) => onShowPriceDetails(e, index, sharedContext);
+                // v.onmouseleave = (e) => onHidePriceDetails(e, index, sharedContext);
+            }),
+        ]),
+
         // MaxHigh_MinLow
         gtap.$polygon(maxHighMinLowData, [
             gtap.$x(xIncrement),
@@ -205,13 +247,12 @@ function renderPriceData(priceData) {
         }
     };
 
-    // const d = new Date(Date.parse(priceData[23].Week_Start.$date))
-    // console.log("priceData:", priceData[23].Week_Start.$date, `${d.getDate()}/${d.getUTCMonth() + 1}`)
-
-    const onShowPriceDetails = (e, context) => {
+    const onShowPriceDetails = (e, dataIndex, context) => {
         gtap.$stopMouseDefaults(e);
 
-        const dataPoint = context.priceData[context.dataIndex];
+        const priceCtx = context.priceCtx[dataIndex];
+        const changeCtx = context.changeCtx[dataIndex];
+        const dataPoint = priceCtx.priceData[dataIndex];
 
         setLegend("Max_High", dataPoint.Max_High);
         setLegend("Mean_High", dataPoint.Mean_High);
@@ -220,24 +261,29 @@ function renderPriceData(priceData) {
         setLegend("Min_Low", dataPoint.Min_Low);
         setLegend("Week", dataPoint.Week, 0);
 
-        context.node.$style(`stroke: #777; fill:none;stroke-width:0.5`);
-
         const start = formatDate(dataPoint.Week_Start.$date);
         const end = formatDate(dataPoint.Week_End.$date);
         const labelText = `${start} - ${end}`;
 
-        priceLabelNodes.forEach(tick => {
-            tick.label.$style(`stroke: none; fill:transparent; font-size:0.6em;`);
+        context.priceCtx.forEach((_, index) => {
+            const style = `stroke: none; fill:transparent; font-size:0.6em;`
+            // priceCtx.labelNode.$style(style);
+            context.priceCtx[index].labelNode.$style(style);
+            context.changeCtx[index].labelNode.$style(style);
         });
 
-        const tick = priceLabelNodes[context.dataIndex];
-        tick.label.$text(labelText);
-        tick.label.$style(`stroke: none; fill:#767A8F; font-size:0.6em;`);
+        priceCtx.labelNode.$text(labelText);
+        priceCtx.labelNode.$style(`stroke: none; fill:#767A8F; font-size:0.6em;`);
+        priceCtx.lineNode.$style(`stroke: #777; fill:none;stroke-width:0.5`);
+        priceCtx.visualBGNode.$style(`stroke: none; fill:#f0f0f0;`);
 
-        context.v.$style(`stroke: none; fill:#f0f0f0;`);
+        changeCtx.labelNode.$text(labelText);
+        changeCtx.labelNode.$style(`stroke: none; fill:#767A8F; font-size:0.6em;`);
+        changeCtx.lineNode.$style(`stroke: #777; fill:none;stroke-width:0.5`);
+        changeCtx.visualBGNode.$style(`stroke: none; fill:#f0f0f0;`);
     }
 
-    const onHidePriceDetails = (e, context) => {
+    const onHidePriceDetails = (e, dataIndex, context) => {
         gtap.$stopMouseDefaults(e);
 
         setLegend("Max_High");
@@ -247,48 +293,36 @@ function renderPriceData(priceData) {
         setLegend("Min_Low");
         setLegend("Week");
 
-        context.node.$style(`stroke: transparent; fill:none;stroke-width:0.5`);
+        const priceCtx = context.priceCtx[dataIndex];
+        const changeCtx = context.changeCtx[dataIndex];
+        const dataPoint = priceCtx.priceData[dataIndex];
+        const labelText = dataPoint.Week;
 
-        const dataPoint = context.priceData[context.dataIndex];
-        const labelText = dataPoint.Week;//formatDate(dataPoint.Week);
+        context.priceCtx.forEach((_, index) => {
+            const fillstyle = (index % 2) ? 'transparent' : '#767A8F';
+            const style = `stroke: none; fill:${fillstyle}; font-size:0.6em;`;
 
-        const tick = priceLabelNodes[context.dataIndex]
-        tick.label.$text(labelText);
-
-        priceLabelNodes.forEach(tick => {
-            const fillstyle = (tick.tickIndex % 2) ? 'transparent' : '#767A8F';
-            tick.label.$style(`stroke: none; fill:${fillstyle}; font-size:0.6em;`);
+            context.priceCtx[index].labelNode.$style(style);
+            context.changeCtx[index].labelNode.$style(style);
         });
 
-        // tick.label.$style(`stroke: none; fill:transparent; font-size:0.6em;`);
-        context.v.$style(`stroke: none; fill:#767A8F00;`);
+        priceCtx.labelNode.$text(labelText);
+        priceCtx.lineNode.$style(`stroke: transparent; fill:none;stroke-width:0.5`);
+        priceCtx.visualBGNode.$style(`stroke: none; fill:#767A8F00;`);
+
+        changeCtx.labelNode.$text(labelText);
+        changeCtx.lineNode.$style(`stroke: transparent; fill:none;stroke-width:0.5`);
+        changeCtx.visualBGNode.$style(`stroke: none; fill:#767A8F00;`);
     }
 
     const xAxisLabeler = (index) => {
         return weekData[index];
     }
-    const priceLabelNodes = [];
 
     let ctx = gtap.container("line-1", gtap.$id("line-chart"));
     gtap.renderVisuals(ctx, [
-        // xAxis(xIncrement, itemCount, weekData),
+        xAxis(xIncrement, itemCount, weekData),
         xAxisName(),
-        gtap.$hLine([
-            gtap.$xMargin(xMargin),
-            gtap.$width(chartWidth),
-            gtap.$y(yMargin),
-            // gtap.$tickMarks(itemCount, xIncrement, gtap.ellipseTicks("fill: #EB395A;"),
-            //     { xMargin: 0 }),
-            gtap.$tickMarkText(itemCount, xIncrement, xAxisLabeler, tick => {
-                tick.alignWithAngle(0);
-                tick.label.$textAnchor('middle');
-
-                const fillstyle = (tick.tickIndex % 2) ? 'transparent' : '#767A8F';
-                tick.label.$style(`stroke: none; fill:${fillstyle}; font-size:0.6em;`);
-
-                priceLabelNodes.push(tick);
-            }, { xMargin: 0, yMargin: 15 })
-        ]),
         yAxis(yTickCount, yTickSpace, yIndexer, "$"),
         horizontalGridLines(yTickCount, yTickSpace),
 
@@ -306,19 +340,26 @@ function renderPriceData(priceData) {
                 node.$x(v.$x() + xIncrement * 0.5);
                 node.$y(v.$y());
                 node.$height(chartHeight)
-                // node.$style(`stroke: #777; fill:none;stroke-width:0.5`);
 
-                const sharedContext = {
-                    v,
+                const fillstyle = (index % 2) ? 'transparent' : '#767A8F';
+                const label = gtap.text(v.$parentElm);
+                label.$x(v.$x() + xIncrement * 0.5);
+                label.$y(v.$y() + chartHeight + 15);
+                label.$text(xAxisLabeler(index));
+                label.$textAnchor('middle');
+                label.$style(`stroke: none; fill:red; font-size:0.6em;`);
+                label.$style(`stroke: none; fill:${fillstyle}; font-size:0.6em;`);
+
+                sharedContext.priceCtx.push({
                     context: ctx,
-                    dataIndex: index,
                     priceData,
-                    node: node,
+                    labelNode: label,
+                    visualBGNode: v,
+                    lineNode: node,
+                });
 
-                };
-
-                v.onmouseover = (e) => onShowPriceDetails(e, sharedContext);
-                v.onmouseleave = (e) => onHidePriceDetails(e, sharedContext);
+                v.onmouseover = (e) => onShowPriceDetails(e, index, sharedContext);
+                v.onmouseleave = (e) => onHidePriceDetails(e, index, sharedContext);
             }),
         ]),
 
