@@ -10,20 +10,56 @@ import pymongo
 
 from lib.shared import DATA_DIR
 
-STOCKS_DIR = ("%sstocks/" % (DATA_DIR))
-ANALYSIS_DIR = ("%sanalysis/" % (DATA_DIR))
+# STOCKS_DIR = ("%sstocks/" % (DATA_DIR))
+# ANALYSIS_DIR = ("%sanalysis/" % (DATA_DIR))
 
 
-def process_analysis(symbol: str):
-    stock_data_path = ("%s%s.csv" % (STOCKS_DIR, symbol))
+def process_watchlist_trends(analysis_col: Collection, watchlist):
+    new_list = []
 
-    analysis_data_path = ("%s%s" % (ANALYSIS_DIR, symbol))
-    summary_data_path = ("%s%s-summary" % (ANALYSIS_DIR, symbol))
-    change_data_path = ("%s%s-change" % (ANALYSIS_DIR, symbol))
-    week_filter = 19
+    for stock in watchlist:
+        item = _calc_symbol_recommendation(analysis_col, stock['symbol'])
+        new_list.append(item)
 
-    generate_analysis(symbol, stock_data_path, week_filter,
-                      analysis_data_path, summary_data_path, change_data_path)
+    return new_list
+
+
+def _calc_symbol_recommendation(analysis_col: Collection, symbol: str):
+    filter = {"Price.Stock": symbol}
+    results = analysis_col.find(filter)
+    analysis_df = pd.DataFrame(results)
+    price_df = pd.DataFrame(analysis_df['Price'].tolist()[0])
+    price_df = price_df.sort_values(by='Week', ascending=False)
+
+    stats = _to_stats(symbol, price_df)
+    change_df = _calc_change(stats)
+
+    # print(change_df)
+
+    mean_val_week_2 = change_df["MeanHigh_MeanLow"][:2].mean()
+    mean_val_month_1 = change_df["MeanHigh_MeanLow"][:4].mean()
+    mean_val_month_2 = change_df["MeanHigh_MeanLow"][:8].mean()
+    mean_val_month_3 = change_df["MeanHigh_MeanLow"][:12].mean()
+
+    item = {
+        'symbol': symbol,
+        'Week_2': mean_val_week_2,
+        'Month_1': mean_val_month_1,
+        'Month_2': mean_val_month_2,
+        'Month_3': mean_val_month_3,
+    }
+
+    return item
+# def process_analysis(symbol: str):
+#     stock_data_path = ("%s%s.csv" % (STOCKS_DIR, symbol))
+
+#     analysis_data_path = ("%s%s" % (ANALYSIS_DIR, symbol))
+#     summary_data_path = ("%s%s-summary" % (ANALYSIS_DIR, symbol))
+#     change_data_path = ("%s%s-change" % (ANALYSIS_DIR, symbol))
+#     week_filter = 19
+
+#     generate_analysis(symbol, stock_data_path, week_filter,
+#                       analysis_data_path, summary_data_path, change_data_path)
 
 
 def generate_analysis_db(stock_col: Collection, analysis_col: Collection, symbol: str, wk_filter):
@@ -34,7 +70,7 @@ def generate_analysis_db(stock_col: Collection, analysis_col: Collection, symbol
     analysis_df = _generate_analysis(stock_df, wk_filter, symbol)
     condensed_analysis_df = _condensed_analysis(analysis_df, wk_filter, symbol)
     stats = _to_stats(symbol, analysis_df)
-    change_df = _calc_change(wk_filter, stats)
+    change_df = _calc_change(stats)
 
     data_dict = {}
     data_dict['Stock'] = symbol
@@ -84,7 +120,6 @@ def generate_analysis(symbol, stock_data_path, wk_filter, analysis_output_path, 
 
 
 ## Private ####################################################################
-
 
 def _condensed_analysis(analysis_df, week_filter, symbol):
     condensed_dict_data = {
@@ -316,7 +351,7 @@ class _Stats(NamedTuple):
     min_low: any
 
 
-def _calc_change(week_filter,  ps: _Stats, include_values=False):
+def _calc_change(ps: _Stats):
     percentages = []
     mean_percentages = []
 

@@ -53,7 +53,9 @@ class MyServer(SimpleHTTPRequestHandler):
     def do_GET(self):
         path = self.translate_path(self.path)
 
-        if path.endswith('.json') and path.startswith('./www/data/analysis'):
+        if self.path == '/data/watchlist.json':
+            self.do_watchlist()
+        elif path.endswith('.json') and path.startswith('./www/data/analysis'):
             self.do_symbol_data(path)
         else:
             super().do_GET()
@@ -79,6 +81,16 @@ class MyServer(SimpleHTTPRequestHandler):
         raw_data = json.dumps(data_dict)
 
         self._send_data(raw_data)
+
+    def do_watchlist(self):
+        print("do_watchlist")
+        trends = analysis.process_watchlist_trends(
+            self.analysis_col, self.watchlist_data)
+        # print("watchlist trends: ", trends)
+        # raw_data = json_util.dumps(self.watchlist_data)
+        raw_data = json_util.dumps(trends)
+        self._send_data(raw_data)
+        # super().do_GET()
 
     def do_symbol_data(self, path):
         print("requesting is stock data. path:", path)

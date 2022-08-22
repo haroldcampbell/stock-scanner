@@ -7,14 +7,28 @@ function onClickSymbol(e$, name) {
     stock.loadCharts(name)
 }
 
+
+
 function createWatchList(symbolList) {
     const container = document.getElementsByClassName("watchlist-container").item(0);
 
-    const createSymbol = (name, ev$) => {
+    const createSymbol = (data, ev$) => {
         const child = document.createElement("div");
-        child.innerText = name
+        child.innerText = data.symbol
         child.className = "symbol"
-        child.onclick = (e) => { ev$(e, name) }
+        child.onclick = (e) => { ev$(e, data.symbol) }
+
+        let h = data.Week_2 + data.Month_1 + data.Month_2 + data.Month_3;
+        h = 206 + h / 4 * 100;
+        let l = data.Week_2 + data.Month_1 + data.Month_2 + data.Month_3;
+        l = (0.75 - l) * 175;
+        const fontColor = l < 57 ? "#f0f0f0" : "#777"
+        child.style = `background-color:hsl(${h}, 100%, ${l}%); color:${fontColor}`;
+
+        console.log(data.symbol, l)
+
+        // console.log(gtap.hslFromIndex)
+
         container.appendChild(child);
     }
 
@@ -28,9 +42,10 @@ function createWatchList(symbolList) {
         window.alert(`New Records: '${data.newRecords}'`)
     });
 
-    createSymbol("--All");
+    // createSymbol("--All");
     symbolList.forEach(symbol => {
-        createSymbol(symbol.symbol, onClickSymbol);
+        // console.log("symbol:", symbol)
+        createSymbol(symbol, onClickSymbol);
     });
 }
 
