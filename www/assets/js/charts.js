@@ -1,4 +1,5 @@
 import utils from "./utils.js"
+import cu from "./chart-utils.js"
 
 const chartWidth = 325;
 const chartHeight = 250;
@@ -18,183 +19,9 @@ const sharedContext = {
     changeCtx: {},
 };
 
-function xAxis(xIncrement, itemCount, weekData) {
-    return gtap.$hLine([
-        gtap.$xMargin(xMargin),
-        gtap.$width(chartWidth),
-        gtap.$y(yMargin),
-        // gtap.$tickMarks(itemCount, xIncrement, gtap.ellipseTicks("fill: #EB395A;"),
-        //     { xMargin: 0 }),
-        // gtap.$tickMarkText(itemCount, xIncrement, index => `${weekData[index]}`, tick => {
-        //     tick.alignWithAngle(0);
-        //     tick.label.$style(`stroke: none; fill:#767A8F; font-size:0.6em;`);
-        //     tick.label.$textAnchor('middle');
-        // }, { xMargin: 0, yMargin: 15 })
-    ])
-}
-
-function xAxisName() {
-    return gtap.$label("Weeks", [
-        gtap.$xMargin(chartWidth + xMargin - 17),
-        gtap.$y(yMargin + 28),
-        gtap.$style(`stroke: none; fill:#767A8F; font-size:0.5em;`),
-    ])
-}
-
-function yAxis(yTickCount, yTickSpace, yIndexer, axisName) {
-    return gtap.$vLine([
-        gtap.$xMargin(xMargin),
-        gtap.$height(chartHeight),
-        gtap.$alignBottom(yMargin),
-        gtap.$tickMarkText(yTickCount, yTickSpace, index => `${yIndexer(index)}`, tick => {
-            tick.label.$style(`stroke: none; fill:#767A8F; font-size:0.6em;`);
-            tick.label.$textAnchor('end');
-            tick.alignWithAngle(270);
-
-            if (tick.tickIndex == (yTickCount - 1)) {
-                tick.label.$text(`${axisName}${tick.label.$text()}`);
-            }
-        }, { xMargin: -5, yMargin: chartHeight + 4 })
-    ])
-}
-
-function horizontalGridLines(yTickCount, yTickSpace) {
-    return gtap.$bars(gtap.$dataWithIncrement(yTickCount, yTickSpace), [
-        gtap.$xMargin(xMargin + 1),
-        gtap.$width(chartWidth - 2),
-        gtap.$css("none"),
-        gtap.$maxY(-chartHeight),
-        gtap.$yMargin(yMargin),
-        gtap.$height(1),
-        gtap.$lambda((v, index) => {
-            const fillColor = (index % 2 == 0) ? "#f0f0f0" : "#f7f7f7";
-            v.$style(`fill: ${fillColor}; stroke:1;`);
-        })
-    ])
-}
-
-function chartLegend(textArray, colors) {
-    return gtap.$wrappedShape(gtap.pointNode, gtap.$dataWithIncrement(textArray.length, 1), [
-        gtap.$x(chartXLegend),
-        gtap.$y(chartYLegend),
-        gtap.$yIncrement(15),
-        gtap.$lambda((v, index) => {
-            const e = gtap.text(v.$parentElm);
-            e.$x(v.$x());
-            e.$y(v.$y());
-            e.$text(textArray[index]);
-            e.$style(`stroke: none; fill:#767A8F; font-size:0.7em; font-weight: 600;`);
-
-            const e2 = gtap.ellipse(v.$parentElm);
-            e2.$size(2, 2);
-            e2.$x(v.$x() - 5);
-            e2.$y(v.$y() - 4);
-            e2.$style(`stroke: none; fill:${colors[index]};`);
-        })
-    ])
-}
+const chartOptions = cu.createChartOptions(chartWidth, chartHeight, xMargin, yMargin, chartXLegend, chartYLegend);
 
 
-function zeroedList(initialList, minValue) {
-    let currentMinValue = minValue
-    if (currentMinValue === undefined) {
-        currentMinValue = Math.min(...initialList, [Number.POSITIVE_INFINITY]);
-    }
-    const list = initialList.map(i => i - currentMinValue);
-
-    return [gtap.$data(list), currentMinValue];
-}
-
-function formatDate(pyDate) {
-    const jsDate = new Date(Date.parse(pyDate))
-    return `${jsDate.getDate()}/${jsDate.getUTCMonth() + 1}`
-}
-
-function setLegend(name, value, decimal = 2) {
-    let item = sharedContext
-        .legendElements
-        .price[name];
-
-    if (value != null || value != undefined) {
-        item.valueNode.$text(`${value.toFixed(decimal)}`);
-    } else {
-        item.valueNode.$text("");
-    }
-};
-
-function onShowChartDetails(e, dataIndex, context) {
-    gtap.$stopMouseDefaults(e);
-
-    const priceCtx = context.priceCtx[dataIndex];
-    const changeCtx = context.changeCtx[dataIndex];
-    const dataPoint = priceCtx.priceData[dataIndex];
-
-    // Show price
-    setLegend("Max_High", dataPoint.Max_High);
-    setLegend("Mean_High", dataPoint.Mean_High);
-    setLegend("Mean_Intra_Day", dataPoint.Mean_Intra_Day);
-    setLegend("Mean_Low", dataPoint.Mean_Low);
-    setLegend("Min_Low", dataPoint.Min_Low);
-    setLegend("Week", dataPoint.Week, 0);
-
-    // console.log("dataPoint:", dataPoint)
-    const start = formatDate(dataPoint.Week_Start.$date);
-    const end = formatDate(dataPoint.Week_End.$date);
-    const labelText = `${start} - ${end}`;
-
-    Object.entries(context.priceCtx).forEach((index, _) => {
-        index = parseInt(index)
-
-        const style = `stroke: none; fill:transparent; font-size:0.6em;`
-        context.priceCtx[index].labelNode.$style(style);
-        context.changeCtx[index].labelNode.$style(style);
-    });
-
-    priceCtx.labelNode.$text(labelText);
-    priceCtx.labelNode.$style(`stroke: none; fill:#767A8F; font-size:0.6em;`);
-    priceCtx.lineNode.$style(`stroke: #777; fill:none;stroke-width:0.5`);
-    priceCtx.visualBGNode.$style(`stroke: none; fill:#f0f0f0;`);
-
-    changeCtx.labelNode.$text(labelText);
-    changeCtx.labelNode.$style(`stroke: none; fill:#767A8F; font-size:0.6em;`);
-    changeCtx.lineNode.$style(`stroke: #777; fill:none;stroke-width:0.5`);
-    changeCtx.visualBGNode.$style(`stroke: none; fill:#f0f0f0;`);
-}
-
-function onHideChartDetails(e, dataIndex, context) {
-    gtap.$stopMouseDefaults(e);
-
-    // Hide price details
-    setLegend("Max_High");
-    setLegend("Mean_High");
-    setLegend("Mean_Intra_Day");
-    setLegend("Mean_Low");
-    setLegend("Min_Low");
-    setLegend("Week");
-
-    const priceCtx = context.priceCtx[dataIndex];
-    const changeCtx = context.changeCtx[dataIndex];
-    const dataPoint = priceCtx.priceData[dataIndex];
-    const labelText = dataPoint.Week;
-
-    Object.entries(context.priceCtx).forEach(index => {
-        index = parseInt(index);
-
-        const fillstyle = (index % 2) ? 'transparent' : '#767A8F';
-        const style = `stroke: none; fill:${fillstyle}; font-size:0.6em;`;
-
-        context.priceCtx[index].labelNode.$style(style);
-        context.changeCtx[index].labelNode.$style(style);
-    });
-
-    priceCtx.labelNode.$text(labelText);
-    priceCtx.lineNode.$style(`stroke: transparent; fill:none;stroke-width:0.5`);
-    priceCtx.visualBGNode.$style(`stroke: none; fill:#767A8F00;`);
-
-    changeCtx.labelNode.$text(labelText);
-    changeCtx.lineNode.$style(`stroke: transparent; fill:none;stroke-width:0.5`);
-    changeCtx.visualBGNode.$style(`stroke: none; fill:#767A8F00;`);
-}
 
 function renderChangeData(priceData) {
     const colors = ["#7EADB9", "#FFD797"];
@@ -218,13 +45,14 @@ function renderChangeData(priceData) {
     const yTickSpace = chartHeight / yTickCount;
     const yIndexer = (index) => { return 100 * (index + 1) * yTickSpace * max_high / chartHeight };
 
+
     let ctx = gtap.container("change-1", gtap.$id("change-chart"));
     gtap.renderVisuals(ctx, [
-        xAxis(xIncrement, itemCount, weekData),
-        xAxisName(),
-        yAxis(yTickCount, yTickSpace, yIndexer, "%"),
-        horizontalGridLines(yTickCount, yTickSpace),
-        chartLegend(textArray, colors),
+        cu.xAxis(chartOptions),
+        cu.xAxisName(chartOptions),
+        cu.yAxis(chartOptions, yTickCount, yTickSpace, yIndexer, "%"),
+        cu.horizontalGridLines(chartOptions, yTickCount, yTickSpace),
+        // cu.chartLegend(chartOptions, textArray, colors),
 
         // Background highlight
         gtap.$bars(gtap.$dataWithIncrement(maxHighMinLowData.itemCount(), 1), [
@@ -258,8 +86,8 @@ function renderChangeData(priceData) {
                     lineNode: node,
                 };
 
-                v.onmouseover = (e) => onShowChartDetails(e, index, sharedContext);
-                v.onmouseleave = (e) => onHideChartDetails(e, index, sharedContext);
+                v.onmouseover = (e) => cu.onShowChartDetails(e, index, sharedContext);
+                v.onmouseleave = (e) => cu.onHideChartDetails(e, index, sharedContext);
             }),
         ]),
 
@@ -300,6 +128,26 @@ function renderChangeData(priceData) {
         }).withPostActions([
             gtap.$style(`stroke:${colors[textArray.indexOf("MeanHigh_MeanLow")]};stroke-width:2`),
         ]),
+
+        // Legend
+        gtap.$wrappedShape(gtap.pointNode, gtap.$dataWithIncrement(textArray.length, 1), [
+            gtap.$x(chartXLegend),
+            gtap.$y(chartYLegend),
+            gtap.$yIncrement(15),
+            gtap.$lambda((v, index) => {
+                const e = gtap.text(v.$parentElm);
+                e.$x(v.$x());
+                e.$y(v.$y());
+                e.$text(textArray[index]);
+                e.$style(`stroke: none; fill:#767A8F; font-size:0.7em; font-weight: 600;`);
+
+                const e2 = gtap.ellipse(v.$parentElm);
+                e2.$size(2, 2);
+                e2.$x(v.$x() - 5);
+                e2.$y(v.$y() - 4);
+                e2.$style(`stroke: none; fill:${colors[index]};`);
+            })
+        ])
     ]);
 }
 
@@ -307,8 +155,8 @@ function renderPriceData(priceData) {
     const textArray = ["Max_High", "Min_Low", "Mean_High", "Mean_Intra_Day", "Mean_Low", "Week"];
     const colors = ["#ED9FA2", "Green", "transparent", "transparent", "transparent", "transparent"];
 
-    let [minLowData, minValue] = zeroedList(priceData.map(s => s.Min_Low))
-    let [maxHighData] = zeroedList(priceData.map(s => s.Max_High), minValue)
+    let [minLowData, minValue] = cu.zeroedList(priceData.map(s => s.Min_Low));
+    let [maxHighData] = cu.zeroedList(priceData.map(s => s.Max_High), minValue);
 
     let weekData = priceData.map(s => s.Week);
 
@@ -332,10 +180,10 @@ function renderPriceData(priceData) {
 
     let ctx = gtap.container("line-1", gtap.$id("line-chart"));
     gtap.renderVisuals(ctx, [
-        xAxis(xIncrement, itemCount, weekData),
-        xAxisName(),
-        yAxis(yTickCount, yTickSpace, yIndexer, "$"),
-        horizontalGridLines(yTickCount, yTickSpace),
+        cu.xAxis(chartOptions),
+        cu.xAxisName(chartOptions),
+        cu.yAxis(chartOptions, yTickCount, yTickSpace, yIndexer, "$"),
+        cu.horizontalGridLines(chartOptions, yTickCount, yTickSpace),
 
         // Background highlight
         gtap.$bars(gtap.$dataWithIncrement(maxHighData.itemCount(), 1), [
@@ -369,8 +217,8 @@ function renderPriceData(priceData) {
                     lineNode: node,
                 };
 
-                v.onmouseover = (e) => onShowChartDetails(e, index, sharedContext);
-                v.onmouseleave = (e) => onHideChartDetails(e, index, sharedContext);
+                v.onmouseover = (e) => cu.onShowChartDetails(e, index, sharedContext);
+                v.onmouseleave = (e) => cu.onHideChartDetails(e, index, sharedContext);
             }),
         ]),
 
@@ -401,7 +249,6 @@ function renderPriceData(priceData) {
             })
         ], {
             curveLength: 3,
-
         }).withPostActions([
             gtap.$style(`stroke-linecap:round;fill:none;stroke:${colors[textArray.indexOf("Min_Low")]};stroke-width:1`),
         ]),

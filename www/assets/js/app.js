@@ -1,5 +1,5 @@
 import utils from "./utils.js"
-import stock from "./stock.js"
+import stock from "./charts.js"
 
 
 function onClickSymbol(e$, name) {
@@ -26,8 +26,6 @@ function createWatchList(symbolList) {
         child.style = `background-color:hsl(${h}, 100%, ${l}%); color:${fontColor}`;
 
         console.log(data.symbol, l)
-
-        // console.log(gtap.hslFromIndex)
 
         container.appendChild(child);
     }
