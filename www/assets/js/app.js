@@ -25,8 +25,6 @@ function createWatchList(symbolList) {
         const fontColor = l < 57 ? "#f0f0f0" : "#777"
         child.style = `background-color:hsl(${h}, 100%, ${l}%); color:${fontColor}`;
 
-        console.log(data.symbol, l)
-
         container.appendChild(child);
     }
 
@@ -52,4 +50,4 @@ utils.getJSON('/data/watchlist.json')
         createWatchList(data)
     });
 
-stock.loadCharts("AAPL")
+stock.loadCharts("AVYA")

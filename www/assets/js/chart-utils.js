@@ -1,5 +1,3 @@
-import utils from "./utils.js"
-
 function createChartOptions(chartWidth, chartHeight, xMargin, yMargin, chartXLegend, chartYLegend) {
     return {
         chartWidth,
@@ -58,28 +56,6 @@ function horizontalGridLines(chartOptions, yTickCount, yTickSpace) {
     ])
 }
 
-// function chartLegend(chartOptions, textArray, colors) {
-//     return gtap.$wrappedShape(gtap.pointNode, gtap.$dataWithIncrement(textArray.length, 1), [
-//         gtap.$x(chartOptions.chartXLegend),
-//         gtap.$y(chartOptions.chartYLegend),
-//         gtap.$yIncrement(15),
-//         gtap.$lambda((v, index) => {
-//             const e = gtap.text(v.$parentElm);
-//             e.$x(v.$x());
-//             e.$y(v.$y());
-//             e.$text(textArray[index]);
-//             e.$style(`stroke: none; fill:#767A8F; font-size:0.7em; font-weight: 600;`);
-
-//             const e2 = gtap.ellipse(v.$parentElm);
-//             e2.$size(2, 2);
-//             e2.$x(v.$x() - 5);
-//             e2.$y(v.$y() - 4);
-//             e2.$style(`stroke: none; fill:${colors[index]};`);
-//         })
-//     ])
-// }
-
-
 function zeroedList(initialList, minValue) {
     let currentMinValue = minValue
     if (currentMinValue === undefined) {
@@ -122,7 +98,6 @@ function onShowChartDetails(e, dataIndex, context) {
     setLegend(context, "Min_Low", dataPoint.Min_Low);
     setLegend(context, "Week", dataPoint.Week, 0);
 
-    // console.log("dataPoint:", dataPoint)
     const start = formatDate(dataPoint.Week_Start.$date);
     const end = formatDate(dataPoint.Week_End.$date);
     const labelText = `${start} - ${end}`;

@@ -21,15 +21,13 @@ const sharedContext = {
 
 const chartOptions = cu.createChartOptions(chartWidth, chartHeight, xMargin, yMargin, chartXLegend, chartYLegend);
 
-
-
-function renderChangeData(priceData) {
+function renderChangeData(stockChangeData) {
     const colors = ["#7EADB9", "#FFD797"];
     const textArray = ["MaxHigh_MinLow", "MeanHigh_MeanLow"];
 
-    let weekData = priceData.map(s => s.Week);
-    let maxHighMinLowData = gtap.$data(priceData.map(s => s.MaxHigh_MinLow));
-    let meanHighMeanLowData = gtap.$data(priceData.map(s => s.MeanHigh_MeanLow));
+    let weekData = stockChangeData.map(s => s.Week);
+    let maxHighMinLowData = gtap.$data(stockChangeData.map(s => s.MaxHigh_MinLow));
+    let meanHighMeanLowData = gtap.$data(stockChangeData.map(s => s.MeanHigh_MeanLow));
 
     let maxData = maxHighMinLowData.max();
 
@@ -46,7 +44,8 @@ function renderChangeData(priceData) {
     const yIndexer = (index) => { return 100 * (index + 1) * yTickSpace * max_high / chartHeight };
 
 
-    let ctx = gtap.container("change-1", gtap.$id("change-chart"));
+
+    let ctx = gtap.container("change-data", gtap.$id("change-chart"));
     gtap.renderVisuals(ctx, [
         cu.xAxis(chartOptions),
         cu.xAxisName(chartOptions),
@@ -75,12 +74,11 @@ function renderChangeData(priceData) {
                 label.$y(v.$y() + chartHeight + 15);
                 label.$text(weekData[index]);
                 label.$textAnchor('middle');
-                label.$style(`stroke: none; fill:red; font-size:0.6em;`);
                 label.$style(`stroke: none; fill:${fillstyle}; font-size:0.6em;`);
 
                 sharedContext.changeCtx[index] = {
                     context: ctx,
-                    priceData,
+                    priceData: stockChangeData,
                     labelNode: label,
                     visualBGNode: v,
                     lineNode: node,
@@ -147,18 +145,73 @@ function renderChangeData(priceData) {
                 e2.$y(v.$y() - 4);
                 e2.$style(`stroke: none; fill:${colors[index]};`);
             })
-        ])
+        ]),
+
+        renderChangePercentages(stockChangeData, weekData, meanHighMeanLowData),
     ]);
 }
 
-function renderPriceData(priceData) {
+function renderChangePercentages(stockChangeData, weekData, meanHighMeanLowData) {
+
+    console.log("weekData: ", weekData)
+    console.log("meanHighMeanLowData: ", meanHighMeanLowData.data)
+    const weeklyPercentageChange = [...meanHighMeanLowData.data].reverse();
+    console.log("meanHighMeanLowData: ", weeklyPercentageChange)
+
+    const yIncrement = 15;
+    const weeklyData = gtap.$data(weeklyPercentageChange);
+    const weekNames = ["1 wk", "2 wk", "3 wk", "4 wk", "5 wk"];
+    weeklyData.withVisibleItems(5);
+
+    return gtap.$bars(weeklyData, [
+        gtap.$x(chartXLegend + 40),
+        gtap.$y(chartYLegend + 60),
+        gtap.$yIncrement(yIncrement + 5),
+        gtap.$maxWidth(50),
+        gtap.$height(15),
+        // gtap.$style(`stroke: none; fill:#767A8F;`),
+
+        gtap.$lambda((v, index) => {
+            //data.Week_2 + data.Month_1 + data.Month_2 + data.Month_3;
+            const d = weeklyData.itemAtIndex(index)
+            // let h = weeklyData.itemAtIndex(index);
+            const h = 170 + d * 80;
+            // let l = weeklyData.itemAtIndex(index);
+            const l = 70 + (0.7 - d) * 50;
+            // const fontColor = l < 57 ? "#f0f0f0" : "#777"
+            // child.style = `background-color:hsl(${h}, 100%, ${l}%); color:${fontColor}`;
+            v.$style(`stroke:none;fill:hsl(${h}, 100%, ${l}%);`);
+        }),
+        // Add text
+        gtap.$lambda((v, index) => {
+            const percentage = weeklyData.rawItemAtIndex(index) * 100;
+            const percentageText = `${percentage.toFixed(0)}%`;
+
+            const valLabel = gtap.text(v.$parentElm);
+            valLabel.$x(v.$x() + v.$width() + 5);
+            valLabel.$y(v.$y() + 11.125);
+            valLabel.$text(percentageText);
+            valLabel.$textAnchor('left');
+            valLabel.$style(`stroke: none; fill:#333; font-size:0.6em;`);
+
+            const wkLabel = gtap.text(v.$parentElm);
+            wkLabel.$x(v.$x() - 25);
+            wkLabel.$y(v.$y() + 11.125);
+            wkLabel.$text(weekNames[index]);
+            wkLabel.$textAnchor('right');
+            wkLabel.$style(`fill:#999; font-size:0.6em;`);
+        }),
+    ]);
+}
+
+function renderPriceData(stockPriceData) {
     const textArray = ["Max_High", "Min_Low", "Mean_High", "Mean_Intra_Day", "Mean_Low", "Week"];
     const colors = ["#ED9FA2", "Green", "transparent", "transparent", "transparent", "transparent"];
 
-    let [minLowData, minValue] = cu.zeroedList(priceData.map(s => s.Min_Low));
-    let [maxHighData] = cu.zeroedList(priceData.map(s => s.Max_High), minValue);
+    let [minLowData, minValue] = cu.zeroedList(stockPriceData.map(s => s.Min_Low));
+    let [maxHighData] = cu.zeroedList(stockPriceData.map(s => s.Max_High), minValue);
 
-    let weekData = priceData.map(s => s.Week);
+    let weekData = stockPriceData.map(s => s.Week);
 
     minLowData.forcedMax(maxHighData.max());
 
@@ -211,7 +264,7 @@ function renderPriceData(priceData) {
 
                 sharedContext.priceCtx[index] = {
                     context: ctx,
-                    priceData,
+                    priceData: stockPriceData,
                     labelNode: label,
                     visualBGNode: v,
                     lineNode: node,
@@ -297,11 +350,11 @@ function loadCharts(symbol) {
     elm.innerHTML = "Loading..."
     utils.getPriceData(symbol)
         .then(data => {
-            console.log("[loadCharts] priceData:", data)
+            console.log("[loadCharts] stockData:", data)
             elm.innerHTML =
                 `<div class="stock-info"><h1>${symbol}</h1> stock</div>`
+                + '<div id="change-chart" class="change-chart" ></div>'
                 + '<div id="line-chart" class="line-chart"></div>'
-                + '<div id = "change-chart" class="change-chart" ></div>';
             renderPriceData(data.Price)
             renderChangeData(data.Change);
         })
