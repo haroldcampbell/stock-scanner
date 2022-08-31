@@ -8,12 +8,8 @@
 	fill: none;
 }
 
-.line-chart svg {
-	width: 535px;
-	height: 350px;
-	background-color: #fff;
-	border: solid 1px #ccc;
-}
+.week-chart svg,
+.line-chart svg,
 .change-chart svg {
 	width: 535px;
 	height: 350px;
