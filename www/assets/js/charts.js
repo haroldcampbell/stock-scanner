@@ -33,7 +33,7 @@ function loadCharts(symbol) {
             console.log("[loadCharts] stockData:", data)
             elm.innerHTML =
                 `<div class="stock-info"><h1>${symbol}</h1> stock</div>`
-                + '<div id="week-chart" class="week-chart" ></div>'
+                + '<div id="week-chart" class="week-chart"></div>'
                 + '<div id="change-chart" class="change-chart" ></div>'
                 + '<div id="line-chart" class="line-chart"></div>';
 

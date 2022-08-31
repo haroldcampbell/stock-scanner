@@ -168,6 +168,23 @@ h3 {
 	flex-grow: unset;
 }
 
+.week-chart {
+	display: flex;
+	flex-direction: row;
+	column-gap: 20px;
+	margin-bottom: 10px;
+}
+.week-chart .week-filters {
+	display: flex;
+	flex-direction: column;
+	row-gap: 10px;
+	width: 115px;
+}
+/* .week-chart svg { */
+/* flex-grow: 2; */
+/* justify-content: flex-end; */
+/* width: 450px; */
+/* } */
 .stock-info {
 	display: flex;
 	flex-direction: row;

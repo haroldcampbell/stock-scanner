@@ -77,6 +77,10 @@ class MyServer(SimpleHTTPRequestHandler):
             print("refreshing analaysis")
             self.do_update_analysis()
 
+        # elif self.path.lower() == "/update-week":
+        #     print("refreshing analaysis")
+        #     self.do_update_week_analysis()
+
         data_dict = {"newRecords": num_records}
         raw_data = json.dumps(data_dict)
 
@@ -127,6 +131,11 @@ class MyServer(SimpleHTTPRequestHandler):
                                           self.analysis_col,
                                           item['symbol'],
                                           19)
+
+    # def do_update_week_analysis(self):
+    #     analysis.generate_week_analysis_db(self.stock_col,
+    #                                        self.analysis_col,
+    #                                        "AVYA")
 
     def path_to_symbol(self, path):
         path_parts = path.split('/')

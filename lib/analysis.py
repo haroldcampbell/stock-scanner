@@ -10,9 +10,6 @@ import pymongo
 
 from lib.shared import DATA_DIR
 
-# STOCKS_DIR = ("%sstocks/" % (DATA_DIR))
-# ANALYSIS_DIR = ("%sanalysis/" % (DATA_DIR))
-
 
 def process_watchlist_trends(analysis_col: Collection, watchlist):
     new_list = []
@@ -50,16 +47,6 @@ def _calc_symbol_recommendation(analysis_col: Collection, symbol: str):
     }
 
     return item
-# def process_analysis(symbol: str):
-#     stock_data_path = ("%s%s.csv" % (STOCKS_DIR, symbol))
-
-#     analysis_data_path = ("%s%s" % (ANALYSIS_DIR, symbol))
-#     summary_data_path = ("%s%s-summary" % (ANALYSIS_DIR, symbol))
-#     change_data_path = ("%s%s-change" % (ANALYSIS_DIR, symbol))
-#     week_filter = 19
-
-#     generate_analysis(symbol, stock_data_path, week_filter,
-#                       analysis_data_path, summary_data_path, change_data_path)
 
 
 def generate_analysis_db(stock_col: Collection, analysis_col: Collection, symbol: str, wk_filter):
@@ -71,12 +58,14 @@ def generate_analysis_db(stock_col: Collection, analysis_col: Collection, symbol
     condensed_analysis_df = _condensed_analysis(analysis_df, wk_filter, symbol)
     stats = _to_stats(symbol, analysis_df)
     change_df = _calc_change(stats)
+    week_df = _to_week_analysis_db(stock_df, symbol)
 
     data_dict = {}
     data_dict['Stock'] = symbol
     data_dict['Price'] = analysis_df.to_dict("records")
     data_dict['Summary'] = condensed_analysis_df.to_dict("records")
     data_dict['Change'] = change_df.to_dict("records")
+    data_dict['Week'] = week_df.to_dict("records")
 
     _save_analysis_db(analysis_col, data_dict, symbol)
 
@@ -87,6 +76,34 @@ def fetch_symbol_db(analysis_col: Collection, symbol: str):
     analysis_df = pd.DataFrame(results)
 
     return analysis_df.to_dict("records")
+
+
+def _to_week_analysis_db(stock_df,  symbol: str):
+    data = []
+    week_data = {}
+    weekIndex = -1
+
+    for _, item in stock_df.iterrows():
+        if item["Week"] != weekIndex:
+            week_data = {}
+            weekIndex = item["Week"]
+            data.append(week_data)
+
+        day_name = pd.to_datetime(item["Date"], errors='coerce').day_name()
+
+        week_data[day_name] = {
+            "Date": item["Date"],
+            "Week": item["Week"],
+            "High": item["High"],
+            "Low": item["Low"],
+            "Open": item["Open"],
+            "Close": item["Close"],
+            "Volume": item["Volume"],
+        }
+
+    week_data_df = pd.DataFrame(data)
+
+    return week_data_df
 
 
 def _save_analysis_db(analysis_col: Collection, data_dict: dict, symbol):
@@ -379,3 +396,4 @@ def _calc_change(ps: _Stats):
 
 def _percentage_change(a, b):
     return round((a-b)/b, 2)
+#

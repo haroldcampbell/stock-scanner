@@ -61,7 +61,6 @@ export function renderChangeData(chartOptions, sharedContext, stockChangeData) {
 
     const xIncrement = chartOptions.chartWidth / maxHighMinLowData.itemCount();
     const max_high = Math.ceil(maxHighMinLowData.max());
-    // const itemCount = maxHighMinLowData.itemCount();
 
     const yTickCount = 10;
     const yTickSpace = chartOptions.chartHeight / yTickCount;

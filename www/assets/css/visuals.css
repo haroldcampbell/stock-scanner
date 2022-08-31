@@ -17,6 +17,11 @@
 	border: solid 1px #ccc;
 }
 
+.week-chart svg {
+	height: 150px;
+	width: 400px;
+}
+
 .chart-outer-container .line {
 	stroke: rgba(255, 0, 110, 0.5);
 	fill: none;

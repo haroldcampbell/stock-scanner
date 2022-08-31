@@ -55,6 +55,11 @@ function initNavActions() {
             window.alert(`New Records: '${data.newRecords}'`)
         })
     );
+    // utils.wireButtonByID("btn-update-week",
+    //     utils.postURLAction("/update-week", data => {
+    //         window.alert(`New Records: '${data.newRecords}'`)
+    //     })
+    // );
 }
 
 function createWatchList(symbolList) {
