@@ -3,13 +3,63 @@ import stock from "./charts.js"
 
 
 function onClickSymbol(e$, name) {
-    // console.log("onClickSymbol e$:", e$, name)
     stock.loadCharts(name)
 }
 
+function rankByVariability(list) {
+    const calcWeight = (data) => {
+        const h = data.Week_2 + data.Month_1 + data.Month_2 + data.Month_3
+        return h / 4;
+    }
 
+    const sortDes = (rList) => {
+        return rList.sort((a, b) => {
+            if (a.rank < b.rank) return 1;
+            if (a.rank > b.rank) return -1;
+            return 0;
+        })
+    }
+    const sortAsc = (rList) => {
+        return rList.sort((a, b) => {
+            if (a.rank < b.rank) return -1;
+            if (a.rank > b.rank) return 1;
+            return 0;
+        })
+    }
+    const rankedList = list.map((item, index) => {
+        return {
+            index,
+            item,
+            rank: calcWeight(item)
+        }
+    })
+
+    const sortedList = sortDes(rankedList)
+
+    return sortedList.map(i => i.item)
+}
+
+function initNavActions() {
+    utils.wireButtonByID("btn-refresh-all",
+        utils.postURLAction("/refresh-all-data", data => {
+            window.alert(`New Records: '${data.newRecords}'`)
+        })
+    );
+    utils.wireButtonByID("btn-refresh-week",
+        utils.postURLAction("/refresh-week-data", data => {
+            window.alert(`New Records: '${data.newRecords}'`)
+        })
+    );
+    utils.wireButtonByID("btn-update-analysis",
+        utils.postURLAction("/update-analysis", data => {
+            window.alert(`New Records: '${data.newRecords}'`)
+        })
+    );
+}
 
 function createWatchList(symbolList) {
+    let childElements = [];
+
     const container = document.getElementsByClassName("watchlist-container").item(0);
 
     const createSymbol = (data, ev$) => {
@@ -26,28 +76,42 @@ function createWatchList(symbolList) {
         child.style = `background-color:hsl(${h}, 100%, ${l}%); color:${fontColor}`;
 
         container.appendChild(child);
+
+        return child
     }
 
-    utils.wireButtonByID("btn-refresh-all", "/refresh-all-data", data => {
-        window.alert(`New Records: '${data.newRecords}'`)
-    });
-    utils.wireButtonByID("btn-refresh-week", "/refresh-week-data", data => {
-        window.alert(`New Records: '${data.newRecords}'`)
-    });
-    utils.wireButtonByID("btn-update-analysis", "/update-analysis", data => {
-        window.alert(`New Records: '${data.newRecords}'`)
+    const createSymbols = (list) => {
+        const childElements = []
+        list.forEach(symbol => {
+            const childElm = createSymbol(symbol, onClickSymbol);
+            childElements.push(childElm)
+        });
+        return childElements;
+    }
+
+    const drainElementList = (list) => {
+        list.forEach(elm => {
+            container.removeChild(elm);
+        })
+    }
+
+    utils.wireButtonByID("btn-sort-name", (btn, $e) => {
+        drainElementList(childElements);
+        childElements = createSymbols(symbolList);
     });
 
-    // createSymbol("--All");
-    symbolList.forEach(symbol => {
-        // console.log("symbol:", symbol)
-        createSymbol(symbol, onClickSymbol);
+    utils.wireButtonByID("btn-sort-pct", (btn, $e) => {
+        drainElementList(childElements);
+        childElements = createSymbols(rankByVariability(symbolList));
     });
+
+    childElements = createSymbols(rankByVariability(symbolList));
 }
 
 utils.getJSON('/data/watchlist.json')
     .then(data => {
-        createWatchList(data)
+        initNavActions();
+        createWatchList(data);
     });
 
 stock.loadCharts("AVYA")

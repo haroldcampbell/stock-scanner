@@ -56,7 +56,18 @@ const getChangeData = (symbol) => {
     return getJSON(`/data/analysis/${symbol}-change.json`);
 }
 
-function wireButtonByID(buttonID, postURL, actionCallback) {
+function postURLAction(postURL, actionCallback) {
+    return (btn, $event) => {
+        postJSON(postURL)
+            .then(data => {
+                if (actionCallback !== undefined) {
+                    actionCallback(data)
+                }
+            });
+    }
+}
+
+function wireButtonByID(buttonID, actionCallback) {
     const btn = document.getElementById(buttonID);
 
     if (btn === null) {
@@ -64,13 +75,7 @@ function wireButtonByID(buttonID, postURL, actionCallback) {
         return;
     }
     btn.onclick = (e) => {
-        // console.log("[wireButtonByID] buttonID", buttonID)
-        postJSON(postURL)
-            .then(data => {
-                if (actionCallback !== undefined) {
-                    actionCallback(data)
-                }
-            });
+        actionCallback(btn, e)
     }
 }
 
@@ -94,5 +99,6 @@ export default {
     getPriceData,
     getChangeData,
     wireButtonByID,
+    postURLAction,
     createButton,
 }
