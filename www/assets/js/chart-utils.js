@@ -50,7 +50,7 @@ function horizontalGridLines(chartOptions, yTickCount, yTickSpace) {
         gtap.$yMargin(chartOptions.yMargin),
         gtap.$height(1),
         gtap.$lambda((v, index) => {
-            const fillColor = (index % 2 == 0) ? "#f0f0f0" : "#f7f7f7";
+            const fillColor = (index % 2 == 0) ? "#f7f7f7" : "#e0e0e0";
             v.$style(`fill: ${fillColor}; stroke:1;`);
         })
     ])

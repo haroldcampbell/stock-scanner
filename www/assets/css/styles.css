@@ -180,11 +180,14 @@ h3 {
 	row-gap: 10px;
 	width: 115px;
 }
-/* .week-chart svg { */
-/* flex-grow: 2; */
-/* justify-content: flex-end; */
-/* width: 450px; */
-/* } */
+
+.week-chart .week-filters .active {
+	border-radius: 2px;
+	background-color: #0c50d1;
+	border: 1px solid #000000;
+	color: #fff;
+}
+
 .stock-info {
 	display: flex;
 	flex-direction: row;

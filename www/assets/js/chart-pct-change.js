@@ -63,16 +63,16 @@ export function renderChangeData(chartOptions, sharedContext, stockChangeData) {
     const max_high = Math.ceil(maxHighMinLowData.max());
 
     const yTickCount = 10;
-    const yTickSpace = chartOptions.chartHeight / yTickCount;
+    const yTickSpace = (chartOptions.chartHeight) / yTickCount;
     const yIndexer = (index) => { return 100 * (index + 1) * yTickSpace * max_high / chartOptions.chartHeight };
 
+    console.log("stockChangeData:", stockChangeData)
     let ctx = gtap.container("change-data", gtap.$id("change-chart"));
     gtap.renderVisuals(ctx, [
         cu.xAxis(chartOptions),
         cu.xAxisName(chartOptions),
         cu.yAxis(chartOptions, yTickCount, yTickSpace, yIndexer, "%"),
         cu.horizontalGridLines(chartOptions, yTickCount, yTickSpace),
-        // cu.chartLegend(chartOptions, textArray, colors),
 
         // Background highlight
         gtap.$bars(gtap.$dataWithIncrement(maxHighMinLowData.itemCount(), 1), [
@@ -81,7 +81,7 @@ export function renderChangeData(chartOptions, sharedContext, stockChangeData) {
             gtap.$xMargin(chartOptions.xMargin),
             gtap.$xIncrement(xIncrement),
             gtap.$height(chartOptions.chartHeight),
-            gtap.$alignBottom(chartOptions.yMargin - 0.5),
+            gtap.$alignBottom(chartOptions.yMargin),
             gtap.$style(`stroke: none; fill:#767A8F00;`),
             gtap.$lambda((v, index) => {
                 const node = gtap.vLine(v.$parentElm);
@@ -92,7 +92,7 @@ export function renderChangeData(chartOptions, sharedContext, stockChangeData) {
                 const fillstyle = (index % 2) ? 'transparent' : '#767A8F';
                 const label = gtap.text(v.$parentElm);
                 label.$x(v.$x() + xIncrement * 0.5);
-                label.$y(v.$y() + chartOptions.chartHeight + 15);
+                label.$y(v.$y() + chartOptions.chartHeight);
                 label.$text(weekData[index]);
                 label.$textAnchor('middle');
                 label.$style(`stroke: none; fill:${fillstyle}; font-size:0.6em;`);
@@ -115,12 +115,12 @@ export function renderChangeData(chartOptions, sharedContext, stockChangeData) {
             gtap.$x(xIncrement),
             gtap.$xMargin(chartOptions.xMargin),
             gtap.$xIncrement(xIncrement),
-            gtap.$maxY(-chartOptions.chartHeight),
+            gtap.$maxY(-chartOptions.chartHeight + 15),
             gtap.$yMargin(chartOptions.yMargin),
         ], {
-            curveLength: 5,
+            curveLength: 2,
         }).withPostActions([
-            gtap.$style(`stroke-linecap:round;fill: none;stroke:${colors[textArray.indexOf("MaxHigh_MinLow")]};stroke-width:2`),
+            gtap.$style(`stroke-linecap:round;fill: none;stroke:${colors[textArray.indexOf("MaxHigh_MinLow")]};stroke-width:1`),
         ]),
 
         // MeanHigh_MeanLow
@@ -128,7 +128,7 @@ export function renderChangeData(chartOptions, sharedContext, stockChangeData) {
             gtap.$x(xIncrement),
             gtap.$xMargin(chartOptions.xMargin),
             gtap.$xIncrement(xIncrement),
-            gtap.$maxY(-chartOptions.chartHeight),
+            gtap.$maxY(-chartOptions.chartHeight + 15),
             gtap.$yMargin(chartOptions.yMargin),
         ], {
             isConnected: true,
