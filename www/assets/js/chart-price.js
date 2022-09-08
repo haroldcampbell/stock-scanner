@@ -27,7 +27,7 @@ export function renderPriceData(chartOptions, sharedContext, stockPriceData) {
         return weekData[index];
     }
 
-    console.log("[renderPriceData] stockPriceData:", stockPriceData)
+    // console.log("[renderPriceData] stockPriceData:", stockPriceData)
 
     const volumeData = gtap.$data(stockPriceData.map(s => s.Mean_Volume));
 
