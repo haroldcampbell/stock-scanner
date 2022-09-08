@@ -21,3 +21,7 @@ def get_stocks_col(dbname: Database):
 
 def get_analysis_col(dbname: Database):
     return dbname["analysis"]
+
+
+def get_watchlist_col(dbname: Database):
+    return dbname["watchlist"]

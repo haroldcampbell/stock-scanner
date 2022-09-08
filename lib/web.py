@@ -5,6 +5,8 @@ import io
 import json
 from lib import market
 from lib import analysis
+from lib import watchlist
+
 from lib.shared import HISTORICAL_PERIOD_IN_DAYS
 from lib import db
 from bson import json_util
@@ -13,12 +15,9 @@ from bson import json_util
 hostName = "localhost"
 serverPort = 8091
 WWW_PATH = "./www/"
-WATCHLIST_PATH = "./www/data/watchlist.json"
 
 
 def start_server(stock_fetcher_fn):
-    # MyServer.stock_fetcher_fn = stock_fetcher_fn
-
     webServer = HTTPServer((hostName, serverPort), MyServer)
 
     print("Server started http://%s:%s" % (hostName, serverPort))
@@ -32,20 +31,13 @@ def start_server(stock_fetcher_fn):
     print("Server stopped.")
 
 
-def init_watchlist():
-    watchlist_data = []
-    with open(WATCHLIST_PATH, 'r') as f:
-        print("[init_watchlist] Loading watchlist data")
-        watchlist_data = json.load(f)
-
-    return watchlist_data
-
-
 class MyServer(SimpleHTTPRequestHandler):
     dbname = db.get_mongo_db()
     stock_col = db.get_stocks_col(dbname)
     analysis_col = db.get_analysis_col(dbname)
-    watchlist_data = init_watchlist()
+    watchlist_col = db.get_watchlist_col(dbname)
+
+    watchlist_data = watchlist.get_watchlist(watchlist_col)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, directory=WWW_PATH, **kwargs)
@@ -75,11 +67,15 @@ class MyServer(SimpleHTTPRequestHandler):
 
         elif self.path.lower() == "/update-analysis":
             print("refreshing analaysis")
-            self.do_update_analysis()
+            num_records = self.do_update_analysis()
 
-        # elif self.path.lower() == "/update-week":
-        #     print("refreshing analaysis")
-        #     self.do_update_week_analysis()
+        elif self.path.lower() == "/add-watchlist-symbol":
+            print("add watchlist symbol: ", self.data_string)
+            num_records = self.do_add_watchlist_symbol(self.data_string)
+
+        elif self.path.lower() == "/remove-watchlist-symbol":
+            print("remove watchlist symbol: NOT IMPLEMENTED")
+            # self.do_remove_watchlist_symbol(self.data_string) # TODO: implement do_remove_watchlist_symbol
 
         data_dict = {"newRecords": num_records}
         raw_data = json.dumps(data_dict)
@@ -104,13 +100,8 @@ class MyServer(SimpleHTTPRequestHandler):
     def do_reload_watch_list_data(self):
         num_records = 0
         for item in self.watchlist_data:
-            num_records += market.save_market_data_db(
-                self.stock_col, item['symbol'], 180)
+            num_records += self._fetch_single_symbol_data(item['symbol'])
 
-            analysis.generate_analysis_db(self.stock_col,
-                                          self.analysis_col,
-                                          item['symbol'],
-                                          19)
         return num_records
 
     def do_reload_week_data(self):
@@ -132,10 +123,16 @@ class MyServer(SimpleHTTPRequestHandler):
                                           item['symbol'],
                                           19)
 
-    # def do_update_week_analysis(self):
-    #     analysis.generate_week_analysis_db(self.stock_col,
-    #                                        self.analysis_col,
-    #                                        "AVYA")
+    def do_add_watchlist_symbol(self, data_string):
+        try:
+            symbol = data_string.decode("utf-8")
+            num_records = self._fetch_single_symbol_data(symbol)
+            watchlist.add_symbol(self.watchlist_col, symbol)
+            return num_records
+        except IndexError:
+            print('[do_add_watchlist_symbol] symbol not found: ', symbol)
+            watchlist.remove_symbol(self.watchlist_col, symbol)
+            return -1
 
     def path_to_symbol(self, path):
         path_parts = path.split('/')
@@ -153,6 +150,15 @@ class MyServer(SimpleHTTPRequestHandler):
             raw_data = json_util.dumps({})
 
         self._send_data(raw_data)
+
+    def _fetch_single_symbol_data(self, symbol):
+        num_records = market.save_market_data_db(
+            self.stock_col, symbol, 180)
+
+        analysis.generate_analysis_db(
+            self.stock_col, self.analysis_col, symbol, 19)
+
+        return num_records
 
     def _send_data(self, raw_data):
         self.send_response(HTTPStatus.OK)

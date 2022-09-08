@@ -16,7 +16,9 @@ def process_watchlist_trends(analysis_col: Collection, watchlist):
 
     for stock in watchlist:
         item = _calc_symbol_recommendation(analysis_col, stock['symbol'])
-        new_list.append(item)
+
+        if item != None:
+            new_list.append(item)
 
     return new_list
 
@@ -25,6 +27,10 @@ def _calc_symbol_recommendation(analysis_col: Collection, symbol: str):
     filter = {"Price.Stock": symbol}
     results = analysis_col.find(filter)
     analysis_df = pd.DataFrame(results)
+
+    if analysis_df.empty:
+        return None
+
     price_df = pd.DataFrame(analysis_df['Price'].tolist()[0])
     price_df = price_df.sort_values(by='Week', ascending=False)
 

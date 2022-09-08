@@ -5,7 +5,9 @@ import stock from "./charts.js"
 function onClickSymbol(e$, name) {
     stock.loadCharts(name)
 }
-
+function rankByName(list) {
+    return list.sort((a, b) => a.symbol.localeCompare(b.symbol));
+}
 function rankByVariability(list) {
     const calcWeight = (data) => {
         const h = data.Week_2 + data.Month_1 + data.Month_2 + data.Month_3
@@ -55,6 +57,17 @@ function initNavActions() {
             window.alert(`New Records: '${data.newRecords}'`)
         })
     );
+    utils.wireButtonByID("btn-add-watchlist-symbol",
+        utils.postURLAction("add-watchlist-symbol", data => {
+            window.alert(`New Records: '${data.newRecords}'`)
+        }, () => {
+            const element = document.getElementById('watchlist-new-symbol');
+            return element.value
+        })
+        //     utils.postURLAction("/update-week", data => {
+        //         window.alert(`New Records: '${data.newRecords}'`)
+        //     })
+    );
     // utils.wireButtonByID("btn-update-week",
     //     utils.postURLAction("/update-week", data => {
     //         window.alert(`New Records: '${data.newRecords}'`)
@@ -102,7 +115,7 @@ function createWatchList(symbolList) {
 
     utils.wireButtonByID("btn-sort-name", (btn, $e) => {
         drainElementList(childElements);
-        childElements = createSymbols(symbolList);
+        childElements = createSymbols(rankByName(symbolList));
     });
 
     utils.wireButtonByID("btn-sort-pct", (btn, $e) => {

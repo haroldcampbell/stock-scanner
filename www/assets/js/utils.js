@@ -23,7 +23,7 @@ const getJSON = (url) => {
     })
 };
 
-const postJSON = (url) => {
+const postJSON = (url, formDataCallback = undefined) => {
     return new Promise(function (resolve, reject) {
         const xhr = new XMLHttpRequest();
         xhr.open('Post', url, true);
@@ -44,7 +44,13 @@ const postJSON = (url) => {
                 statusText: xhr.statusText
             });
         };
-        xhr.send();
+
+        let formData = undefined;
+        if (formDataCallback !== undefined) {
+            formData = formDataCallback();
+        }
+
+        xhr.send(formData);
     })
 };
 
@@ -56,9 +62,9 @@ const getChangeData = (symbol) => {
     return getJSON(`/data/analysis/${symbol}-change.json`);
 }
 
-function postURLAction(postURL, actionCallback) {
+function postURLAction(postURL, actionCallback, formDataCallback = undefined) {
     return (btn, $event) => {
-        postJSON(postURL)
+        postJSON(postURL, formDataCallback)
             .then(data => {
                 if (actionCallback !== undefined) {
                     actionCallback(data)
@@ -79,11 +85,11 @@ function wireButtonByID(buttonID, actionCallback) {
     }
 }
 
-function createButton(container, text, postURL, actionCallback) {
+function createButton(container, text, postURL, actionCallback, formDataCallback = undefined) {
     let child = document.createElement("button");
     child.innerText = text;
     child.onclick = (e) => {
-        postJSON(postURL)
+        postJSON(postURL, formDataCallback)
             .then(data => {
                 if (actionCallback !== undefined) {
                     actionCallback(data)

@@ -213,3 +213,7 @@ h3 {
 	/* row-gap: 10px; */
 	margin: 0;
 }
+
+.stock-actions {
+	padding: 10px 0;
+}
