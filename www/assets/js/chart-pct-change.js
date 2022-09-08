@@ -92,7 +92,7 @@ export function renderChangeData(chartOptions, sharedContext, stockChangeData) {
                 const fillstyle = (index % 2) ? 'transparent' : '#767A8F';
                 const label = gtap.text(v.$parentElm);
                 label.$x(v.$x() + xIncrement * 0.5);
-                label.$y(v.$y() + chartOptions.chartHeight);
+                label.$y(v.$y() + chartOptions.chartHeight + 15);
                 label.$text(weekData[index]);
                 label.$textAnchor('middle');
                 label.$style(`stroke: none; fill:${fillstyle}; font-size:0.6em;`);
