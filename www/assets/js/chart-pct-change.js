@@ -1,6 +1,6 @@
 import cu from "./chart-utils.js"
 
-function renderChangePercentages(chartOptions, meanHighMeanLowData) {
+function renderChangePercentages(chartOptions, minValue, meanHighMeanLowData) {
     const yIncrement = 15;
     const weekNames = ["1 wk", "2 wk", "3 wk", "4 wk", "5 wk"];
     const weeklyPercentageChange = [...meanHighMeanLowData.data].reverse();
@@ -18,14 +18,14 @@ function renderChangePercentages(chartOptions, meanHighMeanLowData) {
         gtap.$lambda((v, index) => {
             const d = weeklyData.itemAtIndex(index)
             const h = 170 + d * 80;
-            const l = 70 + (0.7 - d) * 50;
+            const l = 70 + (0.7 - d) * 30;
 
             v.$style(`stroke:none;fill:hsl(${h}, 100%, ${l}%);`);
         }),
         // Add text
         gtap.$lambda((v, index) => {
-            const percentage = weeklyData.rawItemAtIndex(index) * 100;
-            const percentageText = `${percentage.toFixed(0)}%`;
+            const percentage = (minValue + weeklyData.rawItemAtIndex(index)) * 100;
+            const percentageText = `${percentage.toFixed(0)} %`;
 
             const valLabel = gtap.text(v.$parentElm);
             valLabel.$x(v.$x() + v.$width() + 5);
@@ -44,27 +44,26 @@ function renderChangePercentages(chartOptions, meanHighMeanLowData) {
     ]);
 }
 
-
 export function renderChangeData(chartOptions, sharedContext, stockChangeData) {
     const colors = ["#7EADB9", "#FFD797"];
     const textArray = ["MaxHigh_MinLow", "MeanHigh_MeanLow"];
 
     let weekData = stockChangeData.map(s => s.Week);
-    let maxHighMinLowData = gtap.$data(stockChangeData.map(s => s.MaxHigh_MinLow));
-    let meanHighMeanLowData = gtap.$data(stockChangeData.map(s => s.MeanHigh_MeanLow));
 
-    let maxData = maxHighMinLowData.max();
+    let [meanHighMeanLowData, minValue] = cu.zeroedList(stockChangeData.map(s => s.MeanHigh_MeanLow));
+    let [maxHighMinLowData] = cu.zeroedList(stockChangeData.map(s => s.MaxHigh_MinLow), minValue);
 
-    maxData = maxData > 1 ? maxData : 1;
-    maxHighMinLowData.forcedMax(maxData);
-    meanHighMeanLowData.forcedMax(maxData);
+    meanHighMeanLowData.forcedMax(maxHighMinLowData.max());
 
+    const maxHigh = maxHighMinLowData.max();
     const xIncrement = chartOptions.chartWidth / maxHighMinLowData.itemCount();
-    const max_high = Math.ceil(maxHighMinLowData.max());
 
     const yTickCount = 10;
     const yTickSpace = (chartOptions.chartHeight) / yTickCount;
-    const yIndexer = (index) => { return 100 * (index + 1) * yTickSpace * max_high / chartOptions.chartHeight };
+    const yIndexer = (index) => {
+        const val = minValue + maxHigh / (yTickCount - 2) * (index);
+        return (val * 100).toFixed(2);
+    };
 
     console.log("stockChangeData:", stockChangeData)
     let ctx = gtap.container("change-data", gtap.$id("change-chart"));
@@ -81,7 +80,7 @@ export function renderChangeData(chartOptions, sharedContext, stockChangeData) {
             gtap.$xMargin(chartOptions.xMargin),
             gtap.$xIncrement(xIncrement),
             gtap.$height(chartOptions.chartHeight),
-            gtap.$alignBottom(chartOptions.yMargin),
+            gtap.$alignBottom(chartOptions.yMargin - 0.5),
             gtap.$style(`stroke: none; fill:#767A8F00;`),
             gtap.$lambda((v, index) => {
                 const node = gtap.vLine(v.$parentElm);
@@ -115,8 +114,10 @@ export function renderChangeData(chartOptions, sharedContext, stockChangeData) {
             gtap.$x(xIncrement),
             gtap.$xMargin(chartOptions.xMargin),
             gtap.$xIncrement(xIncrement),
-            gtap.$maxY(-chartOptions.chartHeight + 15),
-            gtap.$yMargin(chartOptions.yMargin),
+            gtap.$lambda((v, index, d) => {
+                const yOffset = chartOptions.chartHeight * .2
+                v.$y((1 - v.getDataValue()) * chartOptions.chartHeight * .8 + 50 + yOffset / 2.0);
+            }),
         ], {
             curveLength: 2,
         }).withPostActions([
@@ -124,19 +125,21 @@ export function renderChangeData(chartOptions, sharedContext, stockChangeData) {
         ]),
 
         // MeanHigh_MeanLow
-        gtap.$lines(meanHighMeanLowData, [
+        gtap.$polygon(meanHighMeanLowData, [
             gtap.$x(xIncrement),
             gtap.$xMargin(chartOptions.xMargin),
             gtap.$xIncrement(xIncrement),
-            gtap.$maxY(-chartOptions.chartHeight + 15),
-            gtap.$yMargin(chartOptions.yMargin),
+            gtap.$lambda((v, index, d) => {
+                const yOffset = chartOptions.chartHeight * .2
+                v.$y((1 - v.getDataValue()) * chartOptions.chartHeight * .8 + 50 + yOffset / 2.0);
+            })
         ], {
             isConnected: true,
             pointActions: [
                 gtap.$lambda((v, index) => {
-                    const val = parseInt(meanHighMeanLowData.rawItemAtIndex(index) * 1000) / 10
+                    const val = (minValue + meanHighMeanLowData.rawItemAtIndex(index)) * 100
                     const node = gtap.text(v.$parentElm)
-                    node.$text(val);
+                    node.$text(val.toFixed(0));
                     node.$x(v.$x());
                     node.$y(v.$y());
                     node.$textAnchor("middle");
@@ -145,7 +148,7 @@ export function renderChangeData(chartOptions, sharedContext, stockChangeData) {
                 })
             ]
         }).withPostActions([
-            gtap.$style(`stroke:${colors[textArray.indexOf("MeanHigh_MeanLow")]};stroke-width:2`),
+            gtap.$style(`fill:none;stroke:${colors[textArray.indexOf("MeanHigh_MeanLow")]};stroke-width:2`),
         ]),
 
         // Legend
@@ -168,6 +171,6 @@ export function renderChangeData(chartOptions, sharedContext, stockChangeData) {
             })
         ]),
 
-        renderChangePercentages(chartOptions, meanHighMeanLowData),
+        renderChangePercentages(chartOptions, minValue, meanHighMeanLowData),
     ]);
 }

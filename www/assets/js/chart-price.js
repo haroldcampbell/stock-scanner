@@ -4,22 +4,22 @@ export function renderPriceData(chartOptions, sharedContext, stockPriceData) {
     const textArray = ["Max_High", "Min_Low", "Mean_High", "Mean_Intra_Day", "Mean_Low", "Week"];
     const colors = ["#ED9FA2", "Green", "transparent", "transparent", "transparent", "transparent"];
 
+    let weekData = stockPriceData.map(s => s.Week);
+
     let [minLowData, minValue] = cu.zeroedList(stockPriceData.map(s => s.Min_Low));
     let [maxHighData] = cu.zeroedList(stockPriceData.map(s => s.Max_High), minValue);
 
-    let weekData = stockPriceData.map(s => s.Week);
-
     minLowData.forcedMax(maxHighData.max());
 
-    const xIncrement = chartOptions.chartWidth / maxHighData.itemCount();
+
     const maxHigh = maxHighData.max();
-    // const itemCount = maxHighData.itemCount();
+    const xIncrement = chartOptions.chartWidth / maxHighData.itemCount();
 
     const yTickCount = 10;
     const yTickSpace = chartOptions.chartHeight / yTickCount;
 
     const yIndexer = (index) => {
-        const val = minValue + maxHigh / (yTickCount - 2) * (index + 0);
+        const val = minValue + maxHigh / (yTickCount - 2) * (index);
         return (val).toFixed(2);
     };
 

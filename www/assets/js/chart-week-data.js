@@ -151,7 +151,6 @@ function calHSLStyle(v, hue) {
 }
 
 export function renderWeekData(chartOptions, data) {
-    console.log("renderWeekData data:", data.Week)
     const yMargin = 25;
     const barWidth = 50;
     const midMargin = 75;
@@ -244,7 +243,6 @@ export function renderWeekData(chartOptions, data) {
             gtap.$x(0),
             gtap.$width(400),
             gtap.$y(midMargin),
-            // gtap.$style(`stroke: #767A8F; stroke-linecap:round; stroke-width:0.8px; stroke-dasharray:1,5;`),
             gtap.$style(`stroke: #bbb; stroke-width:0.8px;`),
 
         ]),
