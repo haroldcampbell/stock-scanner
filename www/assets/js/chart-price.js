@@ -1,8 +1,8 @@
 import cu from "./chart-utils.js"
 
 export function renderPriceData(chartOptions, sharedContext, stockPriceData) {
-    const textArray = ["Max_High", "Min_Low", "Mean_High", "Mean_Intra_Day", "Mean_Low", "Week"];
-    const colors = ["#ED9FA2", "Green", "transparent", "transparent", "transparent", "transparent"];
+    const textArray = ["Max_High", "Min_Low", "Mean_High", "Mean_Intra_Day", "Mean_Low", "Mean_Volume", "Week"];
+    const colors = ["#ED9FA2", "Green", "transparent", "transparent", "transparent", "transparent", "transparent"];
 
     let weekData = stockPriceData.map(s => s.Week);
 
@@ -27,12 +27,44 @@ export function renderPriceData(chartOptions, sharedContext, stockPriceData) {
         return weekData[index];
     }
 
+    console.log("[renderPriceData] stockPriceData:", stockPriceData)
+
+    const volumeData = gtap.$data(stockPriceData.map(s => s.Mean_Volume));
+
+
     let ctx = gtap.container("line-1", gtap.$id("line-chart"));
     gtap.renderVisuals(ctx, [
         cu.xAxis(chartOptions),
         cu.xAxisName(chartOptions),
         cu.yAxis(chartOptions, yTickCount, yTickSpace, yIndexer, "$"),
         cu.horizontalGridLines(chartOptions, yTickCount, yTickSpace),
+
+        // Volume data
+        gtap.$bars(volumeData, [
+            gtap.$x((xIncrement) * .5),
+            gtap.$xMargin(chartOptions.xMargin),
+            gtap.$xIncrement(xIncrement),
+            gtap.$width(xIncrement * .8),
+            gtap.$maxHeight(chartOptions.chartHeight),
+            gtap.$alignBottom(chartOptions.yMargin - 0.5),
+            gtap.$style(`stroke: none; fill:#767A8F30;`),
+            gtap.$lambda((v, index) => {
+                sharedContext.volumeCtx[index] = {
+                    context: ctx,
+                    priceData: stockPriceData,
+                    // labelNode: label,
+                    visualBGNode: v,
+                    // lineNode: node,
+                };
+
+            }),
+        ]),
+
+        gtap.$label(cu.numberWithCommas(volumeData.max()), [
+            gtap.$x(chartOptions.chartWidth + chartOptions.xMargin + 10),
+            gtap.$y(chartOptions.yOffset + 2),
+            gtap.$style(`stroke: none; fill:#444; font-size:0.6em;`),
+        ]),
 
         // Background highlight
         gtap.$bars(gtap.$dataWithIncrement(maxHighData.itemCount(), 1), [
@@ -55,7 +87,7 @@ export function renderPriceData(chartOptions, sharedContext, stockPriceData) {
                 label.$y(v.$y() + chartOptions.chartHeight + 15);
                 label.$text(xAxisLabeler(index));
                 label.$textAnchor('middle');
-                label.$style(`stroke: none; fill:red; font-size:0.6em;`);
+                // label.$style(`stroke: none; fill:red; font-size:0.6em;`);
                 label.$style(`stroke: none; fill:${fillstyle}; font-size:0.6em;`);
 
                 sharedContext.priceCtx[index] = {

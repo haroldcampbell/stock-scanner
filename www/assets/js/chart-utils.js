@@ -5,13 +5,14 @@ function createChartOptions(chartWidth, chartHeight, xMargin, yMargin, chartXLeg
         xMargin,
         yMargin,
         chartXLegend,
-        chartYLegend
+        chartYLegend,
+        yOffset: (yMargin - chartHeight),
     }
 }
 function xAxis(chartOptions) {
     return gtap.$hLine([
         gtap.$xMargin(chartOptions.xMargin),
-        gtap.$width(chartOptions.chartWidth),
+        gtap.$width(chartOptions.chartWidth + 10),
         gtap.$y(chartOptions.yMargin),
     ])
 }
@@ -77,7 +78,7 @@ function setLegend(sharedContext, name, value, decimal = 2) {
         .price[name];
 
     if (value != null || value != undefined) {
-        item.valueNode.$text(`${value.toFixed(decimal)}`);
+        item.valueNode.$text(`${numberWithCommas(value.toFixed(decimal))}`);
     } else {
         item.valueNode.$text("");
     }
@@ -86,6 +87,7 @@ function setLegend(sharedContext, name, value, decimal = 2) {
 function onShowChartDetails(e, dataIndex, context) {
     gtap.$stopMouseDefaults(e);
 
+    const volumeCtx = context.volumeCtx[dataIndex];
     const priceCtx = context.priceCtx[dataIndex];
     const changeCtx = context.changeCtx[dataIndex];
     const dataPoint = priceCtx.priceData[dataIndex];
@@ -96,6 +98,7 @@ function onShowChartDetails(e, dataIndex, context) {
     setLegend(context, "Mean_Intra_Day", dataPoint.Mean_Intra_Day);
     setLegend(context, "Mean_Low", dataPoint.Mean_Low);
     setLegend(context, "Min_Low", dataPoint.Min_Low);
+    setLegend(context, "Mean_Volume", dataPoint.Mean_Volume, 0);
     setLegend(context, "Week", dataPoint.Week, 0);
 
     const start = formatDate(dataPoint.Week_Start.$date);
@@ -110,15 +113,17 @@ function onShowChartDetails(e, dataIndex, context) {
         context.changeCtx[index].labelNode.$style(style);
     });
 
+    volumeCtx.visualBGNode.$style(`stroke: none; fill:#767A8F`);
+
     priceCtx.labelNode.$text(labelText);
     priceCtx.labelNode.$style(`stroke: none; fill:#767A8F; font-size:0.6em;`);
     priceCtx.lineNode.$style(`stroke: #777; fill:none;stroke-width:0.5`);
-    priceCtx.visualBGNode.$style(`stroke: none; fill:#f0f0f0;`);
+    priceCtx.visualBGNode.$style(`stroke: none; fill:#f0f0fe99;`);
 
     changeCtx.labelNode.$text(labelText);
     changeCtx.labelNode.$style(`stroke: none; fill:#767A8F; font-size:0.6em;`);
     changeCtx.lineNode.$style(`stroke: #777; fill:none;stroke-width:0.5`);
-    changeCtx.visualBGNode.$style(`stroke: none; fill:#f0f0f0;`);
+    changeCtx.visualBGNode.$style(`stroke: none; fill:#f0f0fe99;`);
 }
 
 function onHideChartDetails(e, dataIndex, context) {
@@ -130,8 +135,10 @@ function onHideChartDetails(e, dataIndex, context) {
     setLegend(context, "Mean_Intra_Day");
     setLegend(context, "Mean_Low");
     setLegend(context, "Min_Low");
+    setLegend(context, "Mean_Volume");
     setLegend(context, "Week");
 
+    const volumeCtx = context.volumeCtx[dataIndex];
     const priceCtx = context.priceCtx[dataIndex];
     const changeCtx = context.changeCtx[dataIndex];
     const dataPoint = priceCtx.priceData[dataIndex];
@@ -147,6 +154,9 @@ function onHideChartDetails(e, dataIndex, context) {
         context.changeCtx[index].labelNode.$style(style);
     });
 
+    volumeCtx.visualBGNode.$style(`stroke: none; fill:#767A8F30`);
+
+
     priceCtx.labelNode.$text(labelText);
     priceCtx.lineNode.$style(`stroke: transparent; fill:none;stroke-width:0.5`);
     priceCtx.visualBGNode.$style(`stroke: none; fill:#767A8F00;`);
@@ -154,6 +164,10 @@ function onHideChartDetails(e, dataIndex, context) {
     changeCtx.labelNode.$text(labelText);
     changeCtx.lineNode.$style(`stroke: transparent; fill:none;stroke-width:0.5`);
     changeCtx.visualBGNode.$style(`stroke: none; fill:#767A8F00;`);
+}
+
+function numberWithCommas(x) {
+    return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
 }
 
 export default {
@@ -167,5 +181,7 @@ export default {
     // chartLegend,
     setLegend,
     onShowChartDetails,
-    onHideChartDetails
+    onHideChartDetails,
+    numberWithCommas,
 }
+

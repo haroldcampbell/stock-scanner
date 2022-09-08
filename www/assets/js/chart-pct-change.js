@@ -65,7 +65,8 @@ export function renderChangeData(chartOptions, sharedContext, stockChangeData) {
         return (val * 100).toFixed(2);
     };
 
-    console.log("stockChangeData:", stockChangeData)
+
+    console.log("[renderChangeData] stockChangeData:", stockChangeData)
     let ctx = gtap.container("change-data", gtap.$id("change-chart"));
     gtap.renderVisuals(ctx, [
         cu.xAxis(chartOptions),

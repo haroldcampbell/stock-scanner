@@ -20,6 +20,7 @@ const sharedContext = {
         price: {},
         change: {},
     },
+    volumeCtx: {},
     priceCtx: {},
     changeCtx: {},
 };
