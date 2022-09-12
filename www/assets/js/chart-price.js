@@ -60,7 +60,7 @@ export function renderPriceData(chartOptions, sharedContext, stockPriceData) {
             }),
         ]),
 
-        gtap.$label(cu.numberWithCommas(volumeData.max()), [
+        gtap.$label(cu.numberWithCommas(volumeData.max().toFixed(0)), [
             gtap.$x(chartOptions.chartWidth + chartOptions.xMargin + 10),
             gtap.$y(chartOptions.yOffset + 2),
             gtap.$style(`stroke: none; fill:#444; font-size:0.6em;`),
