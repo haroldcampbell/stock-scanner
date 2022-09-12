@@ -25,16 +25,14 @@ const sharedContext = {
     changeCtx: {},
 };
 
-function initStockActions(symbol) {
-    const container = document.getElementsByClassName("stock-actions").item(0);
-    utils.createButton(container,
-        "Remove from watchlist",
-        "/remove-watchlist-symbol",
-        data => window.alert(`New Records: '${data.newRecords}'`),
-        () => symbol);
+function initStockActions(symbol, parentContainer, chartActionCallback) {
+    const actionContainer = document.getElementsByClassName("stock-actions").item(0);
+
+    // console.log("[chartActionCallback]", chartActionCallback)
+    chartActionCallback(parentContainer, actionContainer, symbol);
 }
 
-function loadCharts(symbol) {
+function loadCharts(symbol, chartActionCallback) {
     const elm = document.getElementsByClassName("chart-outer-container").item(0);
     elm.innerHTML = "Loading..."
     utils.getPriceData(symbol)
@@ -50,7 +48,7 @@ function loadCharts(symbol) {
             renderWeekData(chartOptions, data);
             renderPriceData(chartOptions, sharedContext, data.Price);
             renderChangeData(chartOptions, sharedContext, data.Change);
-            initStockActions(symbol);
+            initStockActions(symbol, elm, chartActionCallback);
         })
         .catch(err => {
             console.log("[loadCharts] err:", err)

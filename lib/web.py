@@ -44,9 +44,10 @@ class MyServer(SimpleHTTPRequestHandler):
 
     def do_GET(self):
         path = self.translate_path(self.path)
+        watchlist_data = watchlist.get_watchlist(self.watchlist_col)
 
         if self.path == '/data/watchlist.json':
-            self.do_GET_watchlist()
+            self.do_GET_watchlist(watchlist_data)
 
         elif path.endswith('.json') and path.startswith('./www/data/analysis'):
             self.do_GET_symbol_data(path)
@@ -58,7 +59,6 @@ class MyServer(SimpleHTTPRequestHandler):
         print("in post method data_string:", self.data_string, self.path)
 
         num_records = 0
-        # fecth the current watchlist
         watchlist_data = watchlist.get_watchlist(self.watchlist_col)
 
         if self.path.lower() == "/refresh-all-data":
@@ -78,30 +78,29 @@ class MyServer(SimpleHTTPRequestHandler):
             num_records = self.do_POST_add_watchlist_symbol(self.data_string)
 
         elif self.path.lower() == "/remove-watchlist-symbol":
-            print("remove watchlist symbol: NOT IMPLEMENTED")
-            # self.do_remove_watchlist_symbol(self.data_string) # TODO: implement do_remove_watchlist_symbol
+            print("remove watchlist symbol: ", self.data_string)
+            symbol = self.data_string.decode("utf-8")
+            num_records = self.do_POST_remove_watchlist_symbol(symbol)
 
         data_dict = {"newRecords": num_records}
         raw_data = json.dumps(data_dict)
 
         self._send_data(raw_data)
 
-    def do_GET_watchlist(self):
+    def do_GET_watchlist(self, watchlist_data):
         print("do_watchlist")
-        # fecth the current watchlist
-        watchlist_data = watchlist.get_watchlist(self.watchlist_col)
 
         trends = analysis.process_watchlist_trends(
             self.analysis_col, watchlist_data)
 
         raw_data = json_util.dumps(trends)
         self._send_data(raw_data)
-        # super().do_GET()
 
     def do_GET_symbol_data(self, path):
         print("requesting is stock data. path:", path)
-        symbol = self.path_to_symbol(path)
-        self.fetch_stock_data(symbol)
+
+        symbol = self._path_to_symbol(path)
+        self._fetch_stock_data(symbol)
 
     def do_POST_reload_watchlist_data(self, watchlist_data):
         num_records = 0
@@ -131,7 +130,7 @@ class MyServer(SimpleHTTPRequestHandler):
 
     def do_POST_add_watchlist_symbol(self, data_string):
         try:
-            symbol = data_string.decode("utf-8")
+            symbol = data_string.decode("utf-8").upper()
             num_records = self._fetch_single_symbol_data(symbol)
             watchlist.add_symbol(self.watchlist_col, symbol)
 
@@ -142,14 +141,22 @@ class MyServer(SimpleHTTPRequestHandler):
             watchlist.remove_symbol(self.watchlist_col, symbol)
             return -1
 
-    def path_to_symbol(self, path):
+    def do_POST_remove_watchlist_symbol(self, symbol):
+        if watchlist.has_symbol(self.watchlist_col, symbol):
+            watchlist.remove_symbol(self.watchlist_col, symbol)
+            return 1
+
+        else:
+            return 0
+
+    def _path_to_symbol(self, path):
         path_parts = path.split('/')
         print(path_parts, path_parts[-1])
         json_name = path_parts[-1]
 
         return json_name.split(".")[0]
 
-    def fetch_stock_data(self, symbol):
+    def _fetch_stock_data(self, symbol):
         data_dict = analysis.fetch_symbol_db(self.analysis_col, symbol)
 
         if len(data_dict) > 0:

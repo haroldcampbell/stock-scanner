@@ -2,8 +2,25 @@ import utils from "./utils.js"
 import stock from "./charts.js"
 
 
+/**
+ * Adds the chart actions at the bottom of the charts.
+ * @param {*} actionContainer
+ * @param {*} symbol
+ */
+function chartActions(parentContainer, actionContainer, symbol) {
+    utils.createButton(actionContainer,
+        "Remove from watchlist",
+        "/remove-watchlist-symbol",
+        data => {
+            window.alert(`New Records: '${data.newRecords}'`)
+            getWatchlist();
+            parentContainer.innerHTML = "Select new symbol."
+        },
+        () => symbol);
+}
+
 function onClickSymbol(e$, name) {
-    stock.loadCharts(name)
+    stock.loadCharts(name, chartActions)
 }
 function rankByName(list) {
     return list.sort((a, b) => a.symbol.localeCompare(b.symbol));
@@ -137,6 +154,7 @@ function getWatchlist(wireActions = true) {
         });
 }
 
+
 getWatchlist();
 
-stock.loadCharts("DMS")
+stock.loadCharts("DMS", chartActions)

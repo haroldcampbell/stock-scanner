@@ -43,6 +43,18 @@ def add_symbol(watchlist_col, symbol):
     return result
 
 
+def has_symbol(watchlist_col, symbol):
+    filter = {
+        'symbol': re.compile('^' + re.escape(symbol) + '$', re.IGNORECASE),
+    }
+    num = watchlist_col.count_documents(filter)
+
+    if num == 0:
+        return False
+
+    return True
+
+
 def remove_symbol(watchlist_col, symbol):
     filter = {
         'symbol': re.compile('^' + re.escape(symbol) + '$', re.IGNORECASE),
