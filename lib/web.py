@@ -37,7 +37,7 @@ class MyServer(SimpleHTTPRequestHandler):
     analysis_col = db.get_analysis_col(dbname)
     watchlist_col = db.get_watchlist_col(dbname)
 
-    watchlist_data = watchlist.get_watchlist(watchlist_col)
+    # watchlist_data = watchlist.get_watchlist(watchlist_col)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, directory=WWW_PATH, **kwargs)
@@ -46,9 +46,10 @@ class MyServer(SimpleHTTPRequestHandler):
         path = self.translate_path(self.path)
 
         if self.path == '/data/watchlist.json':
-            self.do_watchlist()
+            self.do_GET_watchlist()
+
         elif path.endswith('.json') and path.startswith('./www/data/analysis'):
-            self.do_symbol_data(path)
+            self.do_GET_symbol_data(path)
         else:
             super().do_GET()
 
@@ -57,21 +58,24 @@ class MyServer(SimpleHTTPRequestHandler):
         print("in post method data_string:", self.data_string, self.path)
 
         num_records = 0
+        # fecth the current watchlist
+        watchlist_data = watchlist.get_watchlist(self.watchlist_col)
+
         if self.path.lower() == "/refresh-all-data":
             print("refreshing all data")
-            num_records = self.do_reload_watch_list_data()
+            num_records = self.do_POST_reload_watchlist_data(watchlist_data)
 
         elif self.path.lower() == "/refresh-week-data":
             print("refreshing week data")
-            num_records = self.do_reload_week_data()
+            num_records = self.do_POST_reload_week_data(watchlist_data)
 
         elif self.path.lower() == "/update-analysis":
             print("refreshing analaysis")
-            num_records = self.do_update_analysis()
+            num_records = self.do_POST_update_analysis(watchlist_data)
 
         elif self.path.lower() == "/add-watchlist-symbol":
             print("add watchlist symbol: ", self.data_string)
-            num_records = self.do_add_watchlist_symbol(self.data_string)
+            num_records = self.do_POST_add_watchlist_symbol(self.data_string)
 
         elif self.path.lower() == "/remove-watchlist-symbol":
             print("remove watchlist symbol: NOT IMPLEMENTED")
@@ -82,31 +86,33 @@ class MyServer(SimpleHTTPRequestHandler):
 
         self._send_data(raw_data)
 
-    def do_watchlist(self):
+    def do_GET_watchlist(self):
         print("do_watchlist")
+        # fecth the current watchlist
+        watchlist_data = watchlist.get_watchlist(self.watchlist_col)
+
         trends = analysis.process_watchlist_trends(
-            self.analysis_col, self.watchlist_data)
-        # print("watchlist trends: ", trends)
-        # raw_data = json_util.dumps(self.watchlist_data)
+            self.analysis_col, watchlist_data)
+
         raw_data = json_util.dumps(trends)
         self._send_data(raw_data)
         # super().do_GET()
 
-    def do_symbol_data(self, path):
+    def do_GET_symbol_data(self, path):
         print("requesting is stock data. path:", path)
         symbol = self.path_to_symbol(path)
         self.fetch_stock_data(symbol)
 
-    def do_reload_watch_list_data(self):
+    def do_POST_reload_watchlist_data(self, watchlist_data):
         num_records = 0
-        for item in self.watchlist_data:
+        for item in watchlist_data:
             num_records += self._fetch_single_symbol_data(item['symbol'])
 
         return num_records
 
-    def do_reload_week_data(self):
+    def do_POST_reload_week_data(self, watchlist_data):
         num_records = 0
-        for item in self.watchlist_data:
+        for item in watchlist_data:
             num_records += market.update_market_data_db(
                 self.stock_col, item['symbol'], 7)
 
@@ -116,19 +122,21 @@ class MyServer(SimpleHTTPRequestHandler):
                                           19)
         return num_records
 
-    def do_update_analysis(self):
-        for item in self.watchlist_data:
+    def do_POST_update_analysis(self, watchlist_data):
+        for item in watchlist_data:
             analysis.generate_analysis_db(self.stock_col,
                                           self.analysis_col,
                                           item['symbol'],
                                           19)
 
-    def do_add_watchlist_symbol(self, data_string):
+    def do_POST_add_watchlist_symbol(self, data_string):
         try:
             symbol = data_string.decode("utf-8")
             num_records = self._fetch_single_symbol_data(symbol)
             watchlist.add_symbol(self.watchlist_col, symbol)
+
             return num_records
+
         except IndexError:
             print('[do_add_watchlist_symbol] symbol not found: ', symbol)
             watchlist.remove_symbol(self.watchlist_col, symbol)

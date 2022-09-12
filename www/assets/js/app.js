@@ -57,28 +57,29 @@ function initNavActions() {
             window.alert(`New Records: '${data.newRecords}'`)
         })
     );
-    utils.wireButtonByID("btn-add-watchlist-symbol",
-        utils.postURLAction("add-watchlist-symbol", data => {
+
+    const watchlistCallback = utils.postURLAction("add-watchlist-symbol",
+        data => {
             window.alert(`New Records: '${data.newRecords}'`)
-        }, () => {
+            getWatchlist(false);
+
+            const element = document.getElementById('watchlist-new-symbol');
+            element.value = "";
+        },
+        () => {
             const element = document.getElementById('watchlist-new-symbol');
             return element.value
-        })
-        //     utils.postURLAction("/update-week", data => {
-        //         window.alert(`New Records: '${data.newRecords}'`)
-        //     })
+        }
     );
-    // utils.wireButtonByID("btn-update-week",
-    //     utils.postURLAction("/update-week", data => {
-    //         window.alert(`New Records: '${data.newRecords}'`)
-    //     })
-    // );
+
+    utils.wireButtonByID("btn-add-watchlist-symbol", watchlistCallback);
 }
 
 function createWatchList(symbolList) {
     let childElements = [];
 
     const container = document.getElementsByClassName("watchlist-container").item(0);
+    container.innerHTML = "";
 
     const createSymbol = (data, ev$) => {
         const child = document.createElement("div");
@@ -126,10 +127,16 @@ function createWatchList(symbolList) {
     childElements = createSymbols(rankByVariability(symbolList));
 }
 
-utils.getJSON('/data/watchlist.json')
-    .then(data => {
-        initNavActions();
-        createWatchList(data);
-    });
+function getWatchlist(wireActions = true) {
+    utils.getJSON('/data/watchlist.json')
+        .then(data => {
+            if (wireActions) {
+                initNavActions();
+            }
+            createWatchList(data);
+        });
+}
 
-stock.loadCharts("AVYA")
+getWatchlist();
+
+stock.loadCharts("DMS")

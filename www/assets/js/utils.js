@@ -80,6 +80,7 @@ function wireButtonByID(buttonID, actionCallback) {
         console.warn("[wireButtonByID] Button not found: ", buttonID, postURL);
         return;
     }
+    btn.onclick = null; // Sanity check
     btn.onclick = (e) => {
         actionCallback(btn, e)
     }

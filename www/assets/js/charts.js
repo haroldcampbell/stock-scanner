@@ -35,12 +35,11 @@ function initStockActions(symbol) {
 }
 
 function loadCharts(symbol) {
-    // console.log("[loadCharts] loading:", symbol)
     const elm = document.getElementsByClassName("chart-outer-container").item(0);
     elm.innerHTML = "Loading..."
     utils.getPriceData(symbol)
         .then(data => {
-            console.log("[loadCharts] stockData:", data)
+            // console.log("[loadCharts] stockData:", data)
             elm.innerHTML =
                 `<div class="stock-info"><h1>${symbol}</h1> stock </div>`
                 + '<div id="week-chart" class="week-chart"></div>'
