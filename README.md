@@ -62,6 +62,7 @@ You can start by issuing the command below in your terminal:
 
 ## Dependencies
 
+- Mongodb (running on `127.0.0.1:27017` - see `lib/db.py`)
 - Python 3
 - Pip 3
 
