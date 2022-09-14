@@ -52,7 +52,7 @@ def _runner_fetch_stock(symbol: str, default_period: int):
 
 def _runner_start_web_server():
     print("CliArg.WebServer")
-    web.start_server(stock_fetcher_fn=fetchStock)
+    web.start_server()
 
 
 def _runner_import_server_watchlist(wlistpath):

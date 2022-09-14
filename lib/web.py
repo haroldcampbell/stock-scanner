@@ -17,7 +17,7 @@ serverPort = 8091
 WWW_PATH = "./www/"
 
 
-def start_server(stock_fetcher_fn):
+def start_server():
     webServer = HTTPServer((hostName, serverPort), MyServer)
 
     print("Server started http://%s:%s" % (hostName, serverPort))
